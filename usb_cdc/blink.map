@@ -1,0 +1,286 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00020000         xr
+SRAM             0x20000000         0x00008000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.text           0x08000000     0x1394
+                0x08000000                . = ALIGN (0x4)
+ *(.interrupt_vector)
+ .interrupt_vector
+                0x08000000       0xc0 startup.o
+                0x08000000                table_interrupt_vector
+ *(.text)
+ .text          0x080000c0       0x54 main.o
+                0x080000c0                main
+                0x080000fc                SystemInit
+ .text          0x08000114       0x68 startup.o
+                0x08000114                Reset_Handler
+                0x08000114                handler_reset
+                0x08000174                DebugMon_Handler
+                0x08000174                HardFault_Handler
+                0x08000174                EXT_INT1_IRQHandler
+                0x08000174                PendSV_Handler
+                0x08000174                NMI_Handler
+                0x08000174                UART1_IRQHandler
+                0x08000174                CAN1_IRQHandler
+                0x08000174                COMPARATOR_IRQHandler
+                0x08000174                POWER_IRQHandler
+                0x08000174                UsageFault_Handler
+                0x08000174                Timer3_IRQHandler
+                0x08000174                default_handler
+                0x08000174                BACKUP_IRQHandler
+                0x08000174                UART2_IRQHandler
+                0x08000174                Timer2_IRQHandler
+                0x08000174                EXT_INT2_IRQHandler
+                0x08000174                ADC_IRQHandler
+                0x08000174                SSP1_IRQHandler
+                0x08000174                USB_IRQHandler
+                0x08000174                Timer1_IRQHandler
+                0x08000174                EXT_INT3_IRQHandler
+                0x08000174                I2C_IRQHandler
+                0x08000174                MemManage_Handler
+                0x08000174                EXT_INT4_IRQHandler
+                0x08000174                SVC_Handler
+                0x08000174                WWDG_IRQHandler
+                0x08000174                SSP2_IRQHandler
+                0x08000174                DMA_IRQHandler
+                0x08000174                CAN2_IRQHandler
+                0x08000174                BusFault_Handler
+ .text          0x0800017c      0x200 system.o
+                0x08000214                sleep
+                0x08000244                PortConfig
+                0x080002e4                ClkConfig
+                0x08000360                SysTick_Handler
+ .text          0x0800037c       0xa4 uart.o
+                0x0800037c                uart2_putch
+                0x080003a8                UartConfig
+ .text          0x08000420      0x76c xprintf.o
+                0x08000420                xputc
+                0x08000470                xputs
+                0x08000498                xfputs
+                0x080007d0                xprintf
+                0x080007f4                xsprintf
+                0x08000834                xfprintf
+                0x08000870                put_dump
+                0x08000964                xgets
+                0x08000a04                xfgets
+                0x08000a3c                xatoi
+ .text          0x08000b8c      0x628 usb.o
+                0x08000b8c                usb_device_init
+                0x08000c00                null_proc
+                0x08000c0c                usb_reset
+                0x08000c3c                usb_device_update
+                0x08000d00                enable_RX_proc
+                0x08000d20                plan_ZeroLength_OUT_proc
+                0x08000d5c                plan_ZeroLength_IN_proc
+                0x08000d94                plan_Data_IN_proc
+                0x08000e60                string_descriptor_proc
+                0x08000ef4                get_descriptor_proc
+                0x08000fe0                input0_for_setaddr_proc
+                0x0800101c                input0_for_setconfig_proc
+                0x0800104c                setup0_proc
+ .text          0x080011b4        0x0 usb_desc.o
+ *(.text*)
+ *(.rodata)
+ .rodata        0x080011b4        0xe main.o
+ *fill*         0x080011c2        0x2 
+ .rodata        0x080011c4       0x1f xprintf.o
+ *fill*         0x080011e3        0x1 
+ .rodata        0x080011e4       0xf8 usb.o
+ .rodata        0x080012dc       0xb6 usb_desc.o
+                0x080012dc                Virtual_Com_Port_DeviceDescriptor
+                0x080012f0                Virtual_Com_Port_ConfigDescriptor
+                0x08001334                Virtual_Com_Port_StringLangID
+                0x08001338                Virtual_Com_Port_StringVendor
+                0x08001360                Virtual_Com_Port_StringProduct
+ *(.rodata*)
+                0x08001394                . = ALIGN (0x4)
+ *fill*         0x08001392        0x2 
+                0x08001394                _data_flash = .
+
+.glue_7         0x08001394        0x0
+ .glue_7        0x08001394        0x0 linker stubs
+
+.glue_7t        0x08001394        0x0
+ .glue_7t       0x08001394        0x0 linker stubs
+
+.vfp11_veneer   0x08001394        0x0
+ .vfp11_veneer  0x08001394        0x0 linker stubs
+
+.v4_bx          0x08001394        0x0
+ .v4_bx         0x08001394        0x0 linker stubs
+
+.iplt           0x08001394        0x0
+ .iplt          0x08001394        0x0 main.o
+
+.rel.dyn        0x08001394        0x0
+ .rel.iplt      0x08001394        0x0 main.o
+
+.data           0x20000000       0x28 load address 0x08001394
+                0x20000000                . = ALIGN (0x4)
+                0x20000000                _data_begin = .
+ *(.data)
+ .data          0x20000000        0x4 main.o
+                0x20000000                test_pwm
+ .data          0x20000004        0x0 startup.o
+ .data          0x20000004        0x0 system.o
+ .data          0x20000004        0x0 uart.o
+ .data          0x20000004        0x0 xprintf.o
+ .data          0x20000004        0x8 usb.o
+                0x20000004                input0_proc
+                0x20000008                output0_proc
+ .data          0x2000000c       0x1a usb_desc.o
+                0x2000000c                Virtual_Com_Port_StringSerial
+ *(.data*)
+                0x20000028                . = ALIGN (0x4)
+ *fill*         0x20000026        0x2 
+                0x20000028                _data_end = .
+
+.igot.plt       0x20000028        0x0 load address 0x080013bc
+ .igot.plt      0x20000028        0x0 main.o
+
+.bss            0x20000028       0x30 load address 0x080013bc
+                0x20000028                . = ALIGN (0x4)
+                0x20000028                _bss_begin = .
+                0x20000028                __bss_start__ = _bss_begin
+ *(.bss)
+ .bss           0x20000028        0x8 main.o
+                0x20000028                Current_Led
+                0x2000002c                i
+ .bss           0x20000030        0x0 startup.o
+ .bss           0x20000030        0x4 system.o
+                0x20000030                system_time
+ .bss           0x20000034        0x0 uart.o
+ .bss           0x20000034        0xc xprintf.o
+                0x20000034                xfunc_out
+                0x2000003c                xfunc_in
+ .bss           0x20000040       0x16 usb.o
+                0x20000040                setup_data
+                0x20000048                tx_length
+                0x2000004c                tx_pbUser
+                0x20000050                devAddr
+                0x20000052                devConfig
+                0x20000054                devControlLineState
+ .bss           0x20000056        0x0 usb_desc.o
+ *(.bss*)
+ *(COMMON)
+                0x20000058                . = ALIGN (0x4)
+ *fill*         0x20000056        0x2 
+                0x20000058                _bss_end = .
+                0x20000058                __bss_end__ = _bss_end
+                0x00000400                _stack_size = 0x400
+                0x20008000                _stack_end = (ORIGIN (SRAM) + LENGTH (SRAM))
+                0x20007c00                _stack_begin = (_stack_end - _stack_size)
+                0x20007c00                . = _stack_begin
+
+._stack         0x20000058      0x400 load address 0x080013ec
+                0x20000458                . = (. + _stack_size)
+ *fill*         0x20000058      0x400 
+LOAD main.o
+LOAD startup.o
+LOAD system.o
+LOAD uart.o
+LOAD xprintf.o
+LOAD usb.o
+LOAD usb_desc.o
+OUTPUT(blink.elf elf32-littlearm)
+
+.debug_info     0x00000000     0x192f
+ .debug_info    0x00000000      0x126 main.o
+ .debug_info    0x00000126       0xf1 startup.o
+ .debug_info    0x00000217      0x67d system.o
+ .debug_info    0x00000894      0x258 uart.o
+ .debug_info    0x00000aec      0x4c9 xprintf.o
+ .debug_info    0x00000fb5      0x83c usb.o
+ .debug_info    0x000017f1      0x13e usb_desc.o
+
+.debug_abbrev   0x00000000      0x851
+ .debug_abbrev  0x00000000       0xfb main.o
+ .debug_abbrev  0x000000fb       0xab startup.o
+ .debug_abbrev  0x000001a6      0x1f4 system.o
+ .debug_abbrev  0x0000039a       0xda uart.o
+ .debug_abbrev  0x00000474      0x194 xprintf.o
+ .debug_abbrev  0x00000608      0x1ec usb.o
+ .debug_abbrev  0x000007f4       0x5d usb_desc.o
+
+.debug_aranges  0x00000000       0xd8
+ .debug_aranges
+                0x00000000       0x20 main.o
+ .debug_aranges
+                0x00000020       0x20 startup.o
+ .debug_aranges
+                0x00000040       0x20 system.o
+ .debug_aranges
+                0x00000060       0x20 uart.o
+ .debug_aranges
+                0x00000080       0x20 xprintf.o
+ .debug_aranges
+                0x000000a0       0x20 usb.o
+ .debug_aranges
+                0x000000c0       0x18 usb_desc.o
+
+.debug_line     0x00000000      0x790
+ .debug_line    0x00000000       0x97 main.o
+ .debug_line    0x00000097       0x50 startup.o
+ .debug_line    0x000000e7      0x107 system.o
+ .debug_line    0x000001ee       0xc8 uart.o
+ .debug_line    0x000002b6      0x2e5 xprintf.o
+ .debug_line    0x0000059b      0x19b usb.o
+ .debug_line    0x00000736       0x5a usb_desc.o
+
+.debug_str      0x00000000      0xafd
+ .debug_str     0x00000000      0x137 main.o
+                                0x155 (size before relaxing)
+ .debug_str     0x00000137       0xa5 startup.o
+                                0x165 (size before relaxing)
+ .debug_str     0x000001dc      0x390 system.o
+                                0x4af (size before relaxing)
+ .debug_str     0x0000056c       0x66 uart.o
+                                0x226 (size before relaxing)
+ .debug_str     0x000005d2       0xa8 xprintf.o
+                                0x1bf (size before relaxing)
+ .debug_str     0x0000067a      0x478 usb.o
+                                0x691 (size before relaxing)
+ .debug_str     0x00000af2        0xb usb_desc.o
+                                0x1d4 (size before relaxing)
+
+.comment        0x00000000       0x6e
+ .comment       0x00000000       0x6e main.o
+                                 0x6f (size before relaxing)
+ .comment       0x0000006e       0x6f startup.o
+ .comment       0x0000006e       0x6f system.o
+ .comment       0x0000006e       0x6f uart.o
+ .comment       0x0000006e       0x6f xprintf.o
+ .comment       0x0000006e       0x6f usb.o
+ .comment       0x0000006e       0x6f usb_desc.o
+
+.ARM.attributes
+                0x00000000       0x33
+ .ARM.attributes
+                0x00000000       0x33 main.o
+ .ARM.attributes
+                0x00000033       0x33 startup.o
+ .ARM.attributes
+                0x00000066       0x33 system.o
+ .ARM.attributes
+                0x00000099       0x33 uart.o
+ .ARM.attributes
+                0x000000cc       0x33 xprintf.o
+ .ARM.attributes
+                0x000000ff       0x33 usb.o
+ .ARM.attributes
+                0x00000132       0x33 usb_desc.o
+
+.debug_frame    0x00000000      0x574
+ .debug_frame   0x00000000       0x4c main.o
+ .debug_frame   0x0000004c       0x4c startup.o
+ .debug_frame   0x00000098       0xe0 system.o
+ .debug_frame   0x00000178       0x58 uart.o
+ .debug_frame   0x000001d0      0x1e4 xprintf.o
+ .debug_frame   0x000003b4      0x1c0 usb.o

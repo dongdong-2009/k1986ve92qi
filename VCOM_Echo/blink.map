@@ -1,0 +1,367 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00020000         xr
+SRAM             0x20000000         0x00008000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.text           0x08000000     0x278c
+                0x08000000                . = ALIGN (0x4)
+ *(.interrupt_vector)
+ .interrupt_vector
+                0x08000000       0xc0 startup.o
+                0x08000000                table_interrupt_vector
+ *(.text)
+ .text          0x080000c0      0x2b4 main.o
+                0x080000f0                main
+                0x080001d8                USB_CDC_RecieveData
+                0x08000230                USB_CDC_DataSent
+                0x0800029c                USB_CDC_GetLineCoding
+                0x080002d0                USB_CDC_SetLineCoding
+                0x08000304                USB_DeviceSetupPacket_Debug
+ .text          0x08000374       0x68 startup.o
+                0x08000374                Reset_Handler
+                0x08000374                handler_reset
+                0x080003d4                DebugMon_Handler
+                0x080003d4                HardFault_Handler
+                0x080003d4                SysTick_Handler
+                0x080003d4                EXT_INT1_IRQHandler
+                0x080003d4                PendSV_Handler
+                0x080003d4                NMI_Handler
+                0x080003d4                UART1_IRQHandler
+                0x080003d4                CAN1_IRQHandler
+                0x080003d4                COMPARATOR_IRQHandler
+                0x080003d4                POWER_IRQHandler
+                0x080003d4                UsageFault_Handler
+                0x080003d4                Timer3_IRQHandler
+                0x080003d4                default_handler
+                0x080003d4                BACKUP_IRQHandler
+                0x080003d4                UART2_IRQHandler
+                0x080003d4                Timer2_IRQHandler
+                0x080003d4                EXT_INT2_IRQHandler
+                0x080003d4                ADC_IRQHandler
+                0x080003d4                SSP1_IRQHandler
+                0x080003d4                Timer1_IRQHandler
+                0x080003d4                EXT_INT3_IRQHandler
+                0x080003d4                I2C_IRQHandler
+                0x080003d4                MemManage_Handler
+                0x080003d4                EXT_INT4_IRQHandler
+                0x080003d4                SVC_Handler
+                0x080003d4                WWDG_IRQHandler
+                0x080003d4                SSP2_IRQHandler
+                0x080003d4                DMA_IRQHandler
+                0x080003d4                CAN2_IRQHandler
+                0x080003d4                BusFault_Handler
+ .text          0x080003dc      0x3d4 MDR32F9Qx_usb_cdc.o
+                0x080003dc                USB_CDC_Init
+                0x08000418                USB_CDC_SetReceiveBuffer
+                0x08000440                USB_CDC_ReceiveStart
+                0x08000468                USB_CDC_ReceiveStop
+                0x08000488                USB_CDC_SendData
+                0x080004c8                USB_CDC_Reset
+                0x0800052c                USB_CDC_GetDescriptor
+                0x080005b4                USB_CDC_ClassRequest
+                0x08000758                USB_CDC_DummyDataReceive
+                0x08000770                USB_CDC_DummyDataSent
+                0x08000780                USB_CDC_DummyGetLineCoding
+                0x08000798                USB_CDC_DummySetLineCoding
+ .text          0x080007b0      0xdf0 MDR32F9Qx_usb_device.o
+                0x08000814                USB_EP_Init
+                0x08000890                USB_EP_Reset
+                0x080008d0                USB_EP_Idle
+                0x08000934                USB_EP_Stall
+                0x0800099c                USB_EP_doDataIn
+                0x08000a08                USB_EP_doDataOut
+                0x08000a60                USB_EP_setSetupHandler
+                0x08000ac4                USB_EP_dispatchEvent
+                0x08000f38                USB_DeviceInit
+                0x08000fa8                USB_DevicePowerOn
+                0x08000fc4                USB_DevicePowerOff
+                0x08000fe0                USB_DeviceReset
+                0x08000ff8                USB_DeviceSuspend
+                0x08001008                USB_DeviceResume
+                0x08001018                USB_DeviceSetupPacket
+                0x0800130c                USB_DeviceClearFeature
+                0x08001344                USB_DeviceSetFeature
+                0x0800137c                USB_DeviceDoStatusInAck
+                0x08001398                USB_DeviceDoStatusOutAck
+                0x080013f4                USB_DeviceDispatchEvent
+                0x08001470                USB_IRQHandler
+                0x0800147c                USB_DeviceDummyGetStatus
+                0x08001498                USB_DeviceDummySetAddress
+                0x080014b0                USB_DeviceDummyGetDescriptor
+                0x080014d0                USB_DeviceDummySetDescriptor
+                0x080014f0                USB_DeviceDummyGetConfiguration
+                0x08001500                USB_DeviceDummySetConfiguration
+                0x08001518                USB_DeviceDummyGetInterface
+                0x08001530                USB_DeviceDummySetInterface
+                0x0800154c                USB_DeviceDummySyncFrame
+                0x08001564                USB_DeviceDummyClassRequest
+                0x08001574                USB_DeviceDummyVendorRequest
+                0x08001584                USB_DeviceDummyDataError
+ .text          0x080015a0      0x85c MDR32F9Qx_usb.o
+                0x080015a0                USB_BRGInit
+                0x0800160c                USB_Reset
+                0x0800163c                USB_GetHSCR
+                0x08001654                USB_SetHSCR
+                0x08001690                USB_GetHSVR
+                0x080016d8                USB_GetHTXC
+                0x080016ec                USB_SetHTXC
+                0x08001724                USB_GetHTXT
+                0x08001738                USB_SetHTXT
+                0x08001754                USB_GetHTXLC
+                0x08001768                USB_SetHTXLC
+                0x080017a0                USB_GetHTXSE
+                0x080017b4                USB_SetHTXSE
+                0x080017ec                USB_GetHTXA
+                0x08001800                USB_SetHTXA
+                0x0800181c                USB_GetHTXE
+                0x08001830                USB_SetHTXE
+                0x0800184c                USB_GetHFN
+                0x08001860                USB_GetHIS
+                0x08001874                USB_SetHIS
+                0x080018ac                USB_GetHIM
+                0x080018c0                USB_SetHIM
+                0x080018f8                USB_GetHRXS
+                0x0800190c                USB_GetHRXP
+                0x08001920                USB_GetHRXA
+                0x08001934                USB_GetHRXE
+                0x08001948                USB_GetHRXCS
+                0x0800195c                USB_GetHSTM
+                0x08001970                USB_GetHRXFD
+                0x08001988                USB_GetHRXFDC
+                0x080019a0                USB_GetHRXFC
+                0x080019b8                USB_SetHRXFC
+                0x080019d8                USB_GetHTXFD
+                0x080019f0                USB_SetHTXFD
+                0x08001a10                USB_GetHTXFC
+                0x08001a28                USB_SetHTXFC
+                0x08001a48                USB_GetSEPxCTRL
+                0x08001a6c                USB_SetSEPxCTRL
+                0x08001ab8                USB_GetSEPxSTS
+                0x08001ae0                USB_GetSEPxTS
+                0x08001b08                USB_GetSEPxNTS
+                0x08001b30                USB_GetSC
+                0x08001b48                USB_SetSC
+                0x08001b84                USB_GetSLS
+                0x08001b9c                USB_GetSIS
+                0x08001bb4                USB_SetSIS
+                0x08001bd4                USB_GetSIM
+                0x08001bec                USB_SetSIM
+                0x08001c28                USB_GetSA
+                0x08001c40                USB_SetSA
+                0x08001c60                USB_GetSFN
+                0x08001c78                USB_GetSEPxRXFD
+                0x08001c9c                USB_GetSEPxRXFDC
+                0x08001cc4                USB_GetSEPxRXFC
+                0x08001cec                USB_SetSEPxRXFC
+                0x08001d18                USB_GetSEPxTXFD
+                0x08001d40                USB_SetSEPxTXFD
+                0x08001d6c                USB_GetSEPxTXFDC
+                0x08001d94                USB_SetSEPxTXFDC
+                0x08001dc0                USB_SEPxToggleEPDATASEQ
+ .text          0x08001dfc      0x990 MDR32F9Qx_rst_clk.o
+                0x08001dfc                RST_CLK_DeInit
+                0x08001e30                RST_CLK_WarmDeInit
+                0x08001e94                RST_CLK_HSEconfig
+                0x08001ee0                RST_CLK_HSEstatus
+                0x08001f28                RST_CLK_LSEconfig
+                0x08001f74                RST_CLK_LSEstatus
+                0x08001fbc                RST_CLK_HSIcmd
+                0x08001fdc                RST_CLK_HSIadjust
+                0x08002010                RST_CLK_HSIstatus
+                0x08002058                RST_CLK_LSIcmd
+                0x08002078                RST_CLK_LSIadjust
+                0x080020ac                RST_CLK_LSIstatus
+                0x080020f4                RST_CLK_CPU_PLLconfig
+                0x08002164                RST_CLK_CPU_PLLuse
+                0x08002184                RST_CLK_CPU_PLLcmd
+                0x080021a4                RST_CLK_CPU_PLLstatus
+                0x080021ec                RST_CLK_CPUclkPrescaler
+                0x08002220                RST_CLK_CPUclkSelection
+                0x08002254                RST_CLK_USB_PLLconfig
+                0x080022c4                RST_CLK_USB_PLLuse
+                0x080022e4                RST_CLK_USB_PLLcmd
+                0x08002304                RST_CLK_USB_PLLstatus
+                0x0800234c                RST_CLK_USBclkPrescaler
+                0x0800236c                RST_CLK_USBclkEnable
+                0x0800238c                RST_CLK_ADCclkSelection
+                0x080023c0                RST_CLK_ADCclkPrescaler
+                0x080023f4                RST_CLK_ADCclkEnable
+                0x08002414                RST_CLK_HSIclkPrescaler
+                0x08002448                RST_CLK_RTC_HSIclkEnable
+                0x08002468                RST_CLK_HSEclkPrescaler
+                0x0800249c                RST_CLK_RTC_HSEclkEnable
+                0x080024bc                RST_CLK_PCLKcmd
+                0x080024f8                RST_CLK_GetClocksFreq
+                0x0800273c                RST_CLK_GetFlagStatus
+ *(.text*)
+ *(.rodata)
+ *(.rodata*)
+                0x0800278c                . = ALIGN (0x4)
+                0x0800278c                _data_flash = .
+
+.glue_7         0x0800278c        0x0
+ .glue_7        0x0800278c        0x0 linker stubs
+
+.glue_7t        0x0800278c        0x0
+ .glue_7t       0x0800278c        0x0 linker stubs
+
+.vfp11_veneer   0x0800278c        0x0
+ .vfp11_veneer  0x0800278c        0x0 linker stubs
+
+.v4_bx          0x0800278c        0x0
+ .v4_bx         0x0800278c        0x0 linker stubs
+
+.iplt           0x0800278c        0x0
+ .iplt          0x0800278c        0x0 main.o
+
+.rel.dyn        0x0800278c        0x0
+ .rel.iplt      0x0800278c        0x0 main.o
+
+.data           0x20000000       0x58 load address 0x0800278c
+                0x20000000                . = ALIGN (0x4)
+                0x20000000                _data_begin = .
+ *(.data)
+ .data          0x20000000        0x0 main.o
+ .data          0x20000000        0x0 startup.o
+ .data          0x20000000       0x57 MDR32F9Qx_usb_cdc.o
+ .data          0x20000057        0x0 MDR32F9Qx_usb_device.o
+ .data          0x20000057        0x0 MDR32F9Qx_usb.o
+ .data          0x20000057        0x0 MDR32F9Qx_rst_clk.o
+ *(.data*)
+                0x20000058                . = ALIGN (0x4)
+ *fill*         0x20000057        0x1 
+                0x20000058                _data_end = .
+
+.igot.plt       0x20000058        0x0 load address 0x080027e4
+ .igot.plt      0x20000058        0x0 main.o
+
+.bss            0x20000058      0x624 load address 0x080027e4
+                0x20000058                . = ALIGN (0x4)
+                0x20000058                _bss_begin = .
+                0x20000058                __bss_start__ = _bss_begin
+ *(.bss)
+ .bss           0x20000058      0x544 main.o
+                0x20000058                USB_Clock_InitStruct
+                0x20000060                USB_DeviceBUSParam
+                0x200000d8                PendingDataLength
+ .bss           0x2000059c        0x0 startup.o
+ .bss           0x2000059c       0x14 MDR32F9Qx_usb_cdc.o
+ .bss           0x200005b0       0xcc MDR32F9Qx_usb_device.o
+                0x200005b0                USB_EPContext
+                0x20000660                USB_CurrentSetupPacket
+                0x20000668                USB_DeviceContext
+ .bss           0x2000067c        0x0 MDR32F9Qx_usb.o
+ .bss           0x2000067c        0x0 MDR32F9Qx_rst_clk.o
+ *(.bss*)
+ *(COMMON)
+                0x2000067c                . = ALIGN (0x4)
+                0x2000067c                _bss_end = .
+                0x2000067c                __bss_end__ = _bss_end
+                0x00000400                _stack_size = 0x400
+                0x20008000                _stack_end = (ORIGIN (SRAM) + LENGTH (SRAM))
+                0x20007c00                _stack_begin = (_stack_end - _stack_size)
+                0x20007c00                . = _stack_begin
+
+._stack         0x2000067c      0x400 load address 0x08002e08
+                0x20000a7c                . = (. + _stack_size)
+ *fill*         0x2000067c      0x400 
+LOAD main.o
+LOAD startup.o
+LOAD MDR32F9Qx_usb_cdc.o
+LOAD MDR32F9Qx_usb_device.o
+LOAD MDR32F9Qx_usb.o
+LOAD MDR32F9Qx_rst_clk.o
+OUTPUT(blink.elf elf32-littlearm)
+
+.debug_info     0x00000000     0x3889
+ .debug_info    0x00000000      0x6ca main.o
+ .debug_info    0x000006ca       0xf1 startup.o
+ .debug_info    0x000007bb      0x72e MDR32F9Qx_usb_cdc.o
+ .debug_info    0x00000ee9     0x1151 MDR32F9Qx_usb_device.o
+ .debug_info    0x0000203a      0xdd5 MDR32F9Qx_usb.o
+ .debug_info    0x00002e0f      0xa7a MDR32F9Qx_rst_clk.o
+
+.debug_abbrev   0x00000000      0xafa
+ .debug_abbrev  0x00000000      0x247 main.o
+ .debug_abbrev  0x00000247       0xab startup.o
+ .debug_abbrev  0x000002f2      0x193 MDR32F9Qx_usb_cdc.o
+ .debug_abbrev  0x00000485      0x2bc MDR32F9Qx_usb_device.o
+ .debug_abbrev  0x00000741      0x21f MDR32F9Qx_usb.o
+ .debug_abbrev  0x00000960      0x19a MDR32F9Qx_rst_clk.o
+
+.debug_aranges  0x00000000       0xc0
+ .debug_aranges
+                0x00000000       0x20 main.o
+ .debug_aranges
+                0x00000020       0x20 startup.o
+ .debug_aranges
+                0x00000040       0x20 MDR32F9Qx_usb_cdc.o
+ .debug_aranges
+                0x00000060       0x20 MDR32F9Qx_usb_device.o
+ .debug_aranges
+                0x00000080       0x20 MDR32F9Qx_usb.o
+ .debug_aranges
+                0x000000a0       0x20 MDR32F9Qx_rst_clk.o
+
+.debug_line     0x00000000      0xd8e
+ .debug_line    0x00000000      0x19f main.o
+ .debug_line    0x0000019f       0x50 startup.o
+ .debug_line    0x000001ef      0x206 MDR32F9Qx_usb_cdc.o
+ .debug_line    0x000003f5      0x478 MDR32F9Qx_usb_device.o
+ .debug_line    0x0000086d      0x251 MDR32F9Qx_usb.o
+ .debug_line    0x00000abe      0x2d0 MDR32F9Qx_rst_clk.o
+
+.debug_str      0x00000000     0x1edd
+ .debug_str     0x00000000      0x5d8 main.o
+                                0x622 (size before relaxing)
+ .debug_str     0x000005d8       0x9e startup.o
+                                0x167 (size before relaxing)
+ .debug_str     0x00000676      0x550 MDR32F9Qx_usb_cdc.o
+                                0x7e8 (size before relaxing)
+ .debug_str     0x00000bc6      0x8d8 MDR32F9Qx_usb_device.o
+                                0xe0a (size before relaxing)
+ .debug_str     0x0000149e      0x481 MDR32F9Qx_usb.o
+                                0x6f5 (size before relaxing)
+ .debug_str     0x0000191f      0x5be MDR32F9Qx_rst_clk.o
+                                0x7b0 (size before relaxing)
+
+.comment        0x00000000       0x6e
+ .comment       0x00000000       0x6e main.o
+                                 0x6f (size before relaxing)
+ .comment       0x0000006e       0x6f startup.o
+ .comment       0x0000006e       0x6f MDR32F9Qx_usb_cdc.o
+ .comment       0x0000006e       0x6f MDR32F9Qx_usb_device.o
+ .comment       0x0000006e       0x6f MDR32F9Qx_usb.o
+ .comment       0x0000006e       0x6f MDR32F9Qx_rst_clk.o
+
+.ARM.attributes
+                0x00000000       0x33
+ .ARM.attributes
+                0x00000000       0x33 main.o
+ .ARM.attributes
+                0x00000033       0x33 startup.o
+ .ARM.attributes
+                0x00000066       0x33 MDR32F9Qx_usb_cdc.o
+ .ARM.attributes
+                0x00000099       0x33 MDR32F9Qx_usb_device.o
+ .ARM.attributes
+                0x000000cc       0x33 MDR32F9Qx_usb.o
+ .ARM.attributes
+                0x000000ff       0x33 MDR32F9Qx_rst_clk.o
+
+.debug_frame    0x00000000     0x1714
+ .debug_frame   0x00000000      0x16c main.o
+ .debug_frame   0x0000016c       0x4c startup.o
+ .debug_frame   0x000001b8      0x228 MDR32F9Qx_usb_cdc.o
+ .debug_frame   0x000003e0      0x570 MDR32F9Qx_usb_device.o
+ .debug_frame   0x00000950      0x894 MDR32F9Qx_usb.o
+ .debug_frame   0x000011e4      0x530 MDR32F9Qx_rst_clk.o
+
+.debug_ranges   0x00000000       0x18
+ .debug_ranges  0x00000000       0x18 MDR32F9Qx_usb_device.o
