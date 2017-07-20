@@ -9,55 +9,55 @@ SRAM             0x20000000         0x00008000         xrw
 Linker script and memory map
 
 
-.text           0x20000000      0x4f0
+.text           0x20000000      0x518
  *(.main_sec)
- .main_sec      0x20000000       0x98 main.o
+ .main_sec      0x20000000       0xb0 main.o
                 0x20000000                main
  *(.text)
- .text          0x20000098      0x458 main.o
-                0x20000170                sleep
-                0x200001a0                PortConfig
-                0x20000284                ssi_init
-                0x200002c8                b2g
-                0x200002e4                g2b
-                0x20000318                adc_init
-                0x20000348                dac_init
-                0x20000374                ClkConfig
-                0x200003e8                set_ram_vt
-                0x2000044c                SysTick_Handler
-                0x20000468                TimerConfig
-                0x200004cc                TIMER1_Handler
+ .text          0x200000b0      0x468 main.o
+                0x20000188                sleep
+                0x200001b8                PortConfig
+                0x2000029c                ssi_init
+                0x200002e0                b2g
+                0x200002fc                g2b
+                0x20000330                adc_init
+                0x20000360                dac_init
+                0x2000038c                ClkConfig
+                0x20000400                set_ram_vt
+                0x20000464                SysTick_Handler
+                0x20000480                TimerConfig
+                0x200004e4                TIMER1_Handler
 
-.glue_7         0x200004f0        0x0
- .glue_7        0x200004f0        0x0 linker stubs
+.glue_7         0x20000518        0x0
+ .glue_7        0x20000518        0x0 linker stubs
 
-.glue_7t        0x200004f0        0x0
- .glue_7t       0x200004f0        0x0 linker stubs
+.glue_7t        0x20000518        0x0
+ .glue_7t       0x20000518        0x0 linker stubs
 
-.vfp11_veneer   0x200004f0        0x0
- .vfp11_veneer  0x200004f0        0x0 linker stubs
+.vfp11_veneer   0x20000518        0x0
+ .vfp11_veneer  0x20000518        0x0 linker stubs
 
-.v4_bx          0x200004f0        0x0
- .v4_bx         0x200004f0        0x0 linker stubs
+.v4_bx          0x20000518        0x0
+ .v4_bx         0x20000518        0x0 linker stubs
 
-.iplt           0x200004f0        0x0
- .iplt          0x200004f0        0x0 main.o
+.iplt           0x20000518        0x0
+ .iplt          0x20000518        0x0 main.o
 
-.rel.dyn        0x200004f0        0x0
- .rel.iplt      0x200004f0        0x0 main.o
+.rel.dyn        0x20000518        0x0
+ .rel.iplt      0x20000518        0x0 main.o
 
-.data           0x200004f0        0x0
+.data           0x20000518        0x0
  *(.data)
- .data          0x200004f0        0x0 main.o
+ .data          0x20000518        0x0 main.o
 
-.igot.plt       0x200004f0        0x0
- .igot.plt      0x200004f0        0x0 main.o
+.igot.plt       0x20000518        0x0
+ .igot.plt      0x20000518        0x0 main.o
 
-.bss            0x20000500      0x1c0
+.bss            0x20000600      0x1c0
  *(.bss)
- .bss           0x20000500      0x1c0 main.o
-                0x20000500                system_time
-                0x20000600                table_interrupt_vector
+ .bss           0x20000600      0x1c0 main.o
+                0x20000600                system_time
+                0x20000700                table_interrupt_vector
 LOAD main.o
 OUTPUT(blink.elf elf32-littlearm)
 
@@ -74,8 +74,8 @@ OUTPUT(blink.elf elf32-littlearm)
 .debug_ranges   0x00000000       0x18
  .debug_ranges  0x00000000       0x18 main.o
 
-.debug_line     0x00000000      0x18f
- .debug_line    0x00000000      0x18f main.o
+.debug_line     0x00000000      0x191
+ .debug_line    0x00000000      0x191 main.o
 
 .debug_str      0x00000000      0x6c4
  .debug_str     0x00000000      0x6c4 main.o

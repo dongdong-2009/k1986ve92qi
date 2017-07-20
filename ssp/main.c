@@ -96,7 +96,7 @@ void adc_init()
 	MDR_RST_CLK->PER_CLOCK |= (1<<17);
 	MDR_RST_CLK->ADC_MCO_CLOCK = (0x02 << 4) + (1 << 13);
 	
-	MDR_ADC->ADC1_CFG = ADC1_CFG_REG_ADON + (6<<ADC1_CFG_REG_CHS_Pos) + 
+	MDR_ADC->ADC1_CFG = ADC1_CFG_REG_ADON + (5<<ADC1_CFG_REG_CHS_Pos) +
 						ADC1_CFG_REG_CLKS;
 }
 
@@ -172,7 +172,7 @@ void TIMER1_Handler(void)
 	MDR_TIMER1->STATUS = 0;
 	//MDR_PORTB->RXTX ^= 1; // PB0
 	MDR_SSP1->DR = 0x555; 					// start ssi request
-	//MDR_ADC->ADC1_CFG |= ADC1_CFG_REG_GO; 	// start adc conversion
+	MDR_ADC->ADC1_CFG |= ADC1_CFG_REG_GO; 	// start adc conversion
 }
 
 __attribute__ ((section(".main_sec")))
@@ -210,13 +210,13 @@ int main()
 			code1 = code;
 			
 			//MDR_DAC->DAC2_DATA = speed << 4;
-			MDR_DAC->DAC2_DATA = code;						
+			//MDR_DAC->DAC2_DATA = code;						
 		}
 		
 		if(MDR_ADC->ADC1_STATUS & ADC_STATUS_FLG_REG_EOCIF)
 		{
-			//MDR_PORTB->RXTX ^= 1; 
-			//MDR_DAC->DAC2_DATA = MDR_ADC->ADC1_RESULT;
+			MDR_PORTB->RXTX ^= 1; 
+			MDR_DAC->DAC2_DATA = MDR_ADC->ADC1_RESULT;
 		}
 
 	}
