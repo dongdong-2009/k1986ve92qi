@@ -18,14 +18,17 @@ extern void set_ram_vt();
 extern void system_init();
 extern uint32_t system_time;
 
+int32_t refpos = 0;
+int32_t reflinpos = 0;
+int32_t startlinpos = 0;
+int32_t startphase = 0;
+int32_t linpos = 0;
 
 int sleep(uint32_t ms)
 {
 	uint32_t t = system_time + ms;
 	while(system_time < t);
 }
-
-
 
 void ssi_init()
 {
@@ -92,8 +95,6 @@ int32_t get_phase(void)
 	return g2b((MAXENC-1) & (MDR_SSP1->DR));
 }
 
-
-
 static inline void pwm_seta(int32_t s)
 {
 	MDR_TIMER3->CCR1 = s+512;
@@ -116,7 +117,6 @@ int main()
 {
 	uint32_t code;
 	uint32_t code1 = 0;
-	int32_t speed = 0;
 	int i = 0;
 	int32_t ia, ib, ic;	
 	int32_t dca = 0, dcc = 0;	
@@ -129,6 +129,8 @@ int main()
 	struct pi_reg_state preg;
 	int32_t fsat = 0;
 	int32_t qref = 0;	
+	int32_t speed;
+	int32_t refspeed = 0;	
 	int32_t position = 0;	
 	uint32_t phase = 0;
 	int32_t dq[2];	
@@ -148,16 +150,22 @@ int main()
 	// do some init actions	
 	dca = 0;
 	dcc = 0;
+	startphase = 0;
 	for(i=0; i<1024; i++)
 	{
 		adc_dma_wait();			
 		
 		dca += (0xfff&(adc_dma_buffer[1]));
 		dcc += (0xfff&(adc_dma_buffer[0]));	
+		
+		startphase += enc_crc(MDR_SSP1->DR);
 	}
 	
 	dca = dca >> 10;
 	dcc = dcc >> 10;
+	startphase = startphase >> 10;
+	
+	refpos = 500000 - startphase;
 	
 	while(1){
 		adc_dma_wait();
@@ -175,12 +183,34 @@ int main()
 		if( (0x0007 & tcnt) == 0){			
 			// 3kHz
 			speed = get_speed(code, &position);				
+			//debug_signal(speed);
+			debug_signal((startphase-position)>>6);
+			
+			reg_update(&preg, (refpos - position), 0);
+			refspeed = preg.y>>12;			
+			//refspeed = -500;
+			
+			reg_update(&sreg, ((refspeed - speed)), 0);
+			qref = sreg.y>>12;
+			if(qref > MAXQCURR) qref = MAXQCURR;
+			if(qref < -MAXQCURR) qref = -MAXQCURR;
 		}
 		
-		qref = -100;
+		
+		if( (0x7fff&tcnt) == 0){
+			if(refpos == 50000 - startphase) refpos = -50000 - startphase; 
+			else refpos = 50000 - startphase;
+		}				
+		
+		/*if( (0x7fff&tcnt) == 0){
+			if(refspeed == -1000) refspeed = 1000;
+			else refspeed = -1000;
+		}*/		
+		
+		//qref = -100;
 		
  		// current regulator debug
-		/*if( (0xffff&tcnt) == 0){
+		/*if( (0xfff&tcnt) == 0){
 			if(qref == -100) qref = 100; // 100 is abt 1A
 			else qref = -100;
 		}*/
@@ -209,7 +239,7 @@ int main()
 */
 
 		// vector sync motor controller
-		phase = 1023&(phase+0);    // phase offset for correct rotor position
+		phase = 1023&(phase+700);    // phase offset for correct rotor position
 
 		// convert abc currents to dq
 		abc[0] = ia;
@@ -221,9 +251,9 @@ int main()
 		ed = 0 - dq[0];
 		eq = qref - dq[1];
 		
-		debug_signal(dq[1]<<2);		
+		//debug_signal(dq[1]<<2);		
 		
-		// regulators do its work
+		// currents regulators do its work
 		reg_update(&dreg, ed , fsat);
 		reg_update(&qreg, eq , fsat);
 		

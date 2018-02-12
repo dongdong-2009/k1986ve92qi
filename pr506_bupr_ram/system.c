@@ -146,16 +146,15 @@ void TimerConfig(void)
 	// setting for dead time generator (DTG)
 	//MDR_TIMER3->CH1_DTG |= (1 << 4);
 	//MDR_TIMER3->CH1_DTG |= 15;
-	MDR_TIMER3->CH1_DTG |= ((0xff&(150)) << 6); 					// delay DTG	
-	MDR_TIMER3->CH2_DTG |= ((0xff&(150)) << 6); 					// delay DTG	
-	MDR_TIMER3->CH3_DTG |= ((0xff&(150)) << 6); 					// delay DTG	
+	MDR_TIMER3->CH1_DTG |= ((0xff&(150)) << 5); 					// delay DTG	
+	MDR_TIMER3->CH2_DTG |= ((0xff&(150)) << 5); 					// delay DTG	
+	MDR_TIMER3->CH3_DTG |= ((0xff&(150)) << 5); 					// delay DTG	
 
 	MDR_TIMER3->IE |= TIMER_IE_CNT_ARR_EVENT_IE;					// прерывание по событию  ARR=CNT
 	NVIC_EnableIRQ(Timer3_IRQn); 									// enable in nvic int from tim3	
 
 	MDR_TIMER3->CNTRL = TIMER_CNTRL_CNT_EN; 						// start count up
 }
-
 
 void set_ram_vt()
 {

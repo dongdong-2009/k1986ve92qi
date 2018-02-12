@@ -9,49 +9,51 @@ SRAM             0x20000000         0x00008000         xrw
 Linker script and memory map
 
 
-.text           0x20000000      0x518
+.text           0x20000000      0x588
  *(.main_sec)
- .main_sec      0x20000000       0xb0 main.o
+ .main_sec      0x20000000       0x84 main.o
                 0x20000000                main
  *(.text)
- .text          0x200000b0      0x468 main.o
-                0x20000188                sleep
-                0x200001b8                PortConfig
-                0x2000029c                ssi_init
-                0x200002e0                b2g
-                0x200002fc                g2b
-                0x20000330                adc_init
-                0x20000360                dac_init
-                0x2000038c                ClkConfig
-                0x20000400                set_ram_vt
-                0x20000464                SysTick_Handler
-                0x20000480                TimerConfig
-                0x200004e4                TIMER1_Handler
+ .text          0x20000084      0x504 main.o
+                0x2000014c                sleep
+                0x2000017c                PortConfig
+                0x200002a0                ssi_init
+                0x200002e4                b2g
+                0x20000300                g2b
+                0x20000334                adc_init
+                0x20000364                dac_init
+                0x20000390                ClkConfig
+                0x20000404                set_ram_vt
+                0x20000474                SysTick_Handler
+                0x20000490                TimerConfig
+                0x200004f4                TIMER1_Handler
+                0x20000538                EXTINT4_Handler
+                0x20000554                get_phase
 
-.glue_7         0x20000518        0x0
- .glue_7        0x20000518        0x0 linker stubs
+.glue_7         0x20000588        0x0
+ .glue_7        0x20000588        0x0 linker stubs
 
-.glue_7t        0x20000518        0x0
- .glue_7t       0x20000518        0x0 linker stubs
+.glue_7t        0x20000588        0x0
+ .glue_7t       0x20000588        0x0 linker stubs
 
-.vfp11_veneer   0x20000518        0x0
- .vfp11_veneer  0x20000518        0x0 linker stubs
+.vfp11_veneer   0x20000588        0x0
+ .vfp11_veneer  0x20000588        0x0 linker stubs
 
-.v4_bx          0x20000518        0x0
- .v4_bx         0x20000518        0x0 linker stubs
+.v4_bx          0x20000588        0x0
+ .v4_bx         0x20000588        0x0 linker stubs
 
-.iplt           0x20000518        0x0
- .iplt          0x20000518        0x0 main.o
+.iplt           0x20000588        0x0
+ .iplt          0x20000588        0x0 main.o
 
-.rel.dyn        0x20000518        0x0
- .rel.iplt      0x20000518        0x0 main.o
+.rel.dyn        0x20000588        0x0
+ .rel.iplt      0x20000588        0x0 main.o
 
-.data           0x20000518        0x0
+.data           0x20000588        0x0
  *(.data)
- .data          0x20000518        0x0 main.o
+ .data          0x20000588        0x0 main.o
 
-.igot.plt       0x20000518        0x0
- .igot.plt      0x20000518        0x0 main.o
+.igot.plt       0x20000588        0x0
+ .igot.plt      0x20000588        0x0 main.o
 
 .bss            0x20000600      0x1c0
  *(.bss)
@@ -61,11 +63,11 @@ Linker script and memory map
 LOAD main.o
 OUTPUT(blink.elf elf32-littlearm)
 
-.debug_info     0x00000000      0xb61
- .debug_info    0x00000000      0xb61 main.o
+.debug_info     0x00000000      0xb75
+ .debug_info    0x00000000      0xb75 main.o
 
-.debug_abbrev   0x00000000      0x275
- .debug_abbrev  0x00000000      0x275 main.o
+.debug_abbrev   0x00000000      0x27b
+ .debug_abbrev  0x00000000      0x27b main.o
 
 .debug_aranges  0x00000000       0x28
  .debug_aranges
@@ -74,12 +76,12 @@ OUTPUT(blink.elf elf32-littlearm)
 .debug_ranges   0x00000000       0x18
  .debug_ranges  0x00000000       0x18 main.o
 
-.debug_line     0x00000000      0x191
- .debug_line    0x00000000      0x191 main.o
+.debug_line     0x00000000      0x1a5
+ .debug_line    0x00000000      0x1a5 main.o
 
-.debug_str      0x00000000      0x6c4
- .debug_str     0x00000000      0x6c4 main.o
-                                0x6f7 (size before relaxing)
+.debug_str      0x00000000      0x6d8
+ .debug_str     0x00000000      0x6d8 main.o
+                                0x70b (size before relaxing)
 
 .comment        0x00000000       0x6e
  .comment       0x00000000       0x6e main.o
@@ -90,5 +92,5 @@ OUTPUT(blink.elf elf32-littlearm)
  .ARM.attributes
                 0x00000000       0x33 main.o
 
-.debug_frame    0x00000000      0x25c
- .debug_frame   0x00000000      0x25c main.o
+.debug_frame    0x00000000      0x278
+ .debug_frame   0x00000000      0x278 main.o

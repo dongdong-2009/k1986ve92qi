@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project>
+  <fileVersion>2</fileVersion>
+  <fileChecksum>294875212</fileChecksum>
+  <configuration>
+    <name>Debug</name>
+    <outputs>
+      <file>$PROJ_DIR$\Debug\Obj\serial.r43</file>
+      <file>$TOOLKIT_DIR$\lib\dlib\dl430fn.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\menu.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\time.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\map_bmp.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\AT45DB041B.r43</file>
+      <file>$TOOLKIT_DIR$\inc\dlib\ysizet.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\main.r43</file>
+      <file>$TOOLKIT_DIR$\config\lnk430F1611.xcl</file>
+      <file>$TOOLKIT_DIR$\inc\dlib\ymath.h</file>
+      <file>$TOOLKIT_DIR$\inc\dlib\yvals.h</file>
+      <file>$TOOLKIT_DIR$\lib\dlib\dl430fn.h</file>
+      <file>$TOOLKIT_DIR$\inc\dlib\stdlib.h</file>
+      <file>$TOOLKIT_DIR$\inc\msp430x16x.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\MT12864.r43</file>
+      <file>$TOOLKIT_DIR$\config\multiplier.xcl</file>
+      <file>$PROJ_DIR$\Debug\Obj\file.r43</file>
+      <file>$PROJ_DIR$\Debug\Exe\pult_v5.d43</file>
+      <file>$TOOLKIT_DIR$\inc\dlib\xencoding_limits.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\ico_bmp_alpha.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\ico_bmp.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\strutils.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\gps.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\font_bmp.r43</file>
+      <file>$TOOLKIT_DIR$\inc\dlib\math.h</file>
+      <file>$TOOLKIT_DIR$\inc\intrinsics.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\modem.r43</file>
+      <file>$TOOLKIT_DIR$\inc\dlib\DLib_Product.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\gl.r43</file>
+      <file>$TOOLKIT_DIR$\inc\dlib\string.h</file>
+      <file>$TOOLKIT_DIR$\inc\in430.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\wav_tbl.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\sound.r43</file>
+      <file>$TOOLKIT_DIR$\inc\dlib\DLib_Defaults.h</file>
+      <file>$PROJ_DIR$\Debug\Obj\test_bmp.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\cos_sin_tbl.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\buttons.r43</file>
+      <file>$PROJ_DIR$\test_bmp.c</file>
+      <file>$PROJ_DIR$\time.c</file>
+      <file>$PROJ_DIR$\wav_tbl.c</file>
+      <file>$PROJ_DIR$\buttons.h</file>
+      <file>$PROJ_DIR$\AT45DB041B.h</file>
+      <file>$PROJ_DIR$\buttons_def.h</file>
+      <file>$PROJ_DIR$\map_bmp.h</file>
+      <file>$PROJ_DIR$\menu.h</file>
+      <file>$PROJ_DIR$\menu_def.h</file>
+      <file>$PROJ_DIR$\modem.h</file>
+      <file>$PROJ_DIR$\modem_def.h</file>
+      <file>$PROJ_DIR$\MT12864.h</file>
+      <file>$PROJ_DIR$\MT12864_def.h</file>
+      <file>$PROJ_DIR$\serial.h</file>
+      <file>$PROJ_DIR$\sound.h</file>
+      <file>$PROJ_DIR$\strutils.h</file>
+      <file>$PROJ_DIR$\test_bmp.h</file>
+      <file>$PROJ_DIR$\time.h</file>
+      <file>$PROJ_DIR$\wav_tbl.h</file>
+      <file>$PROJ_DIR$\AT45DB041B.c</file>
+      <file>$PROJ_DIR$\file_def.h</file>
+      <file>$PROJ_DIR$\font_bmp.h</file>
+      <file>$PROJ_DIR$\gdef.h</file>
+      <file>$PROJ_DIR$\gl.h</file>
+      <file>$PROJ_DIR$\gl_def.h</file>
+      <file>$PROJ_DIR$\gps.h</file>
+      <file>$PROJ_DIR$\ico_bmp_alpha.h</file>
+      <file>$PROJ_DIR$\buttons.c</file>
+      <file>$PROJ_DIR$\cos_sin_tbl.c</file>
+      <file>$PROJ_DIR$\file.c</file>
+      <file>$PROJ_DIR$\file.h</file>
+      <file>$PROJ_DIR$\font_bmp.c</file>
+      <file>$PROJ_DIR$\gl.c</file>
+      <file>$PROJ_DIR$\gps.c</file>
+      <file>$PROJ_DIR$\ico_bmp.c</file>
+      <file>$PROJ_DIR$\ico_bmp_alpha.c</file>
+      <file>$PROJ_DIR$\main.c</file>
+      <file>$PROJ_DIR$\map_bmp.c</file>
+      <file>$PROJ_DIR$\menu.c</file>
+      <file>$PROJ_DIR$\modem.c</file>
+      <file>$PROJ_DIR$\MT12864.c</file>
+      <file>$PROJ_DIR$\serial.c</file>
+      <file>$PROJ_DIR$\sound.c</file>
+      <file>$PROJ_DIR$\strutils.c</file>
+    </outputs>
+    <file>
+      <name>$PROJ_DIR$\Debug\Exe\pult_v5.d43</name>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 8 15 5 14 36 35 16 23 28 22 20 19 7 4 2 26 0 32 21 34 3 31 1</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 17</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\test_bmp.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 34</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\time.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 3</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 59 13 30 25</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\wav_tbl.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 31</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\AT45DB041B.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 5</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 59 13 30 25 54</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\buttons.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 36</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 59 13 30 25 42</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\cos_sin_tbl.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 35</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\file.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 16</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 12 10 33 11 27 18 6 24 9 54 57 41 59 13 30 25</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\font_bmp.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 23</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\gl.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 28</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 29 10 33 11 27 18 6 12 59 13 30 25 48 49 58 61</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\gps.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 22</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 29 10 33 11 27 18 6 50 59 13 30 25</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\ico_bmp.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 20</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\ico_bmp_alpha.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 19</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\main.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 7</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 29 10 33 11 27 18 6 12 52 59 13 30 25 54 60 61 48 49 53 58 43 46 47 40 42 63 44 45 50 41 67 57 51 55 62</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\map_bmp.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 4</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\menu.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 2</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 45 59 13 30 25 54 60 61</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\modem.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 26</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 29 10 33 11 27 18 6 12 59 13 30 25 54 50 47</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\MT12864.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 14</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 59 13 30 25 54 49</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\serial.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 0</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 59 13 30 25 54</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\sound.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 32</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 59 13 30 25</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\strutils.c</name>
+      <outputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 21</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICC430</name>
+          <file> 29 10 33 11 27 18 6 12</file>
+        </tool>
+      </inputs>
+    </file>
+    <forcedrebuild>
+      <name>[REBUILD_ALL]</name>
+    </forcedrebuild>
+  </configuration>
+  <configuration>
+    <name>Release</name>
+    <outputs/>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+    <forcedrebuild>
+      <name>[REBUILD_ALL]</name>
+    </forcedrebuild>
+  </configuration>
+</project>
+
+

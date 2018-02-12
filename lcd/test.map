@@ -1,0 +1,111 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00020000         xr
+SRAM             0x20000000         0x00008000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.text           0x20000000      0x61c
+ *(.text)
+ .text          0x20000000       0x9c main.o
+                0x20000000                main
+                0x20000048                PortConfig
+ .text          0x2000009c      0x580 MT12864.o
+                0x200000c4                DisplayInit
+                0x20000278                DisplayOn
+                0x200002d0                DisplayOff
+                0x20000328                DisplaySelectChip
+                0x20000368                DisplaySTARTLine
+                0x20000398                DisplaySetPage
+                0x200003c8                DisplaySetAddress
+                0x200003f8                DisplayReadStatus
+                0x20000418                DisplayWriteData
+                0x20000444                DisplayReadData
+                0x20000464                DisplayClear
+                0x200004c0                DisplayCopy
+                0x20000600                DisplaySetPixel
+
+.rodata         0x2000061c        0x2
+ .rodata        0x2000061c        0x2 MT12864.o
+                0x2000061c                SELTBL
+
+.glue_7         0x20000620        0x0
+ .glue_7        0x20000620        0x0 linker stubs
+
+.glue_7t        0x20000620        0x0
+ .glue_7t       0x20000620        0x0 linker stubs
+
+.vfp11_veneer   0x20000620        0x0
+ .vfp11_veneer  0x20000620        0x0 linker stubs
+
+.v4_bx          0x20000620        0x0
+ .v4_bx         0x20000620        0x0 linker stubs
+
+.iplt           0x20000620        0x0
+ .iplt          0x20000620        0x0 main.o
+
+.rel.dyn        0x20000620        0x0
+ .rel.iplt      0x20000620        0x0 main.o
+
+.data           0x2000061e        0x0
+ *(.data)
+ .data          0x2000061e        0x0 main.o
+ .data          0x2000061e        0x0 MT12864.o
+
+.igot.plt       0x20000620        0x0
+ .igot.plt      0x20000620        0x0 main.o
+
+.bss            0x20000620        0xc
+ *(.bss)
+ .bss           0x20000620        0x8 main.o
+                0x20000620                Current_Led
+                0x20000624                i
+ .bss           0x20000628        0x4 MT12864.o
+                0x20000628                LCD_light
+LOAD main.o
+LOAD MT12864.o
+OUTPUT(blink.elf elf32-littlearm)
+
+.debug_info     0x00000000      0x56a
+ .debug_info    0x00000000      0x1ec main.o
+ .debug_info    0x000001ec      0x37e MT12864.o
+
+.debug_abbrev   0x00000000      0x27f
+ .debug_abbrev  0x00000000       0xd9 main.o
+ .debug_abbrev  0x000000d9      0x1a6 MT12864.o
+
+.debug_aranges  0x00000000       0x40
+ .debug_aranges
+                0x00000000       0x20 main.o
+ .debug_aranges
+                0x00000020       0x20 MT12864.o
+
+.debug_line     0x00000000      0x25a
+ .debug_line    0x00000000       0xcc main.o
+ .debug_line    0x000000cc      0x18e MT12864.o
+
+.debug_str      0x00000000      0x2e1
+ .debug_str     0x00000000      0x1c7 main.o
+                                0x1e0 (size before relaxing)
+ .debug_str     0x000001c7      0x11a MT12864.o
+                                0x248 (size before relaxing)
+
+.comment        0x00000000       0x6e
+ .comment       0x00000000       0x6e main.o
+                                 0x6f (size before relaxing)
+ .comment       0x0000006e       0x6f MT12864.o
+
+.ARM.attributes
+                0x00000000       0x33
+ .ARM.attributes
+                0x00000000       0x33 main.o
+ .ARM.attributes
+                0x00000033       0x33 MT12864.o
+
+.debug_frame    0x00000000      0x280
+ .debug_frame   0x00000000       0x4c main.o
+ .debug_frame   0x0000004c      0x234 MT12864.o

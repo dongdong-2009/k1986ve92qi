@@ -1,0 +1,164 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+FLASH            0x08000000         0x00020000         xr
+SRAM             0x20000000         0x00008000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.text           0x08000000      0x5ec
+                0x08000000                . = ALIGN (0x4)
+ *(.interrupt_vector)
+ .interrupt_vector
+                0x08000000       0xc0 startup.o
+                0x08000000                table_interrupt_vector
+ *(.text)
+ .text          0x080000c0      0x4c4 main.o
+                0x08000198                sleep
+                0x080001c8                PortConfig
+                0x080002d0                ssi_init
+                0x08000314                b2g
+                0x08000330                g2b
+                0x08000364                adc_init
+                0x08000394                dac_init
+                0x080003c0                ClkConfig
+                0x08000434                TimerConfig
+                0x08000498                main
+                0x08000518                EXT_INT4_IRQHandler
+                0x08000534                SysTick_Handler
+                0x08000550                Timer1_IRQHandler
+ .text          0x08000584       0x68 startup.o
+                0x08000584                Reset_Handler
+                0x08000584                handler_reset
+                0x080005e4                DebugMon_Handler
+                0x080005e4                HardFault_Handler
+                0x080005e4                EXT_INT1_IRQHandler
+                0x080005e4                PendSV_Handler
+                0x080005e4                NMI_Handler
+                0x080005e4                UART1_IRQHandler
+                0x080005e4                CAN1_IRQHandler
+                0x080005e4                COMPARATOR_IRQHandler
+                0x080005e4                POWER_IRQHandler
+                0x080005e4                UsageFault_Handler
+                0x080005e4                Timer3_IRQHandler
+                0x080005e4                default_handler
+                0x080005e4                BACKUP_IRQHandler
+                0x080005e4                UART2_IRQHandler
+                0x080005e4                Timer2_IRQHandler
+                0x080005e4                EXT_INT2_IRQHandler
+                0x080005e4                ADC_IRQHandler
+                0x080005e4                SSP1_IRQHandler
+                0x080005e4                USB_IRQHandler
+                0x080005e4                EXT_INT3_IRQHandler
+                0x080005e4                I2C_IRQHandler
+                0x080005e4                MemManage_Handler
+                0x080005e4                SVC_Handler
+                0x080005e4                WWDG_IRQHandler
+                0x080005e4                SSP2_IRQHandler
+                0x080005e4                DMA_IRQHandler
+                0x080005e4                CAN2_IRQHandler
+                0x080005e4                BusFault_Handler
+ *(.text*)
+ *(.rodata)
+ *(.rodata*)
+                0x080005ec                . = ALIGN (0x4)
+                0x080005ec                _data_flash = .
+
+.glue_7         0x080005ec        0x0
+ .glue_7        0x080005ec        0x0 linker stubs
+
+.glue_7t        0x080005ec        0x0
+ .glue_7t       0x080005ec        0x0 linker stubs
+
+.vfp11_veneer   0x080005ec        0x0
+ .vfp11_veneer  0x080005ec        0x0 linker stubs
+
+.v4_bx          0x080005ec        0x0
+ .v4_bx         0x080005ec        0x0 linker stubs
+
+.iplt           0x080005ec        0x0
+ .iplt          0x080005ec        0x0 main.o
+
+.rel.dyn        0x080005ec        0x0
+ .rel.iplt      0x080005ec        0x0 main.o
+
+.data           0x20000000        0x0 load address 0x080005ec
+                0x20000000                . = ALIGN (0x4)
+                0x20000000                _data_begin = .
+ *(.data)
+ .data          0x20000000        0x0 main.o
+ .data          0x20000000        0x0 startup.o
+ *(.data*)
+                0x20000000                . = ALIGN (0x4)
+                0x20000000                _data_end = .
+
+.igot.plt       0x20000000        0x0 load address 0x080005ec
+ .igot.plt      0x20000000        0x0 main.o
+
+.bss            0x20000000        0x4 load address 0x080005ec
+                0x20000000                . = ALIGN (0x4)
+                0x20000000                _bss_begin = .
+                0x20000000                __bss_start__ = _bss_begin
+ *(.bss)
+ .bss           0x20000000        0x4 main.o
+                0x20000000                system_time
+ .bss           0x20000004        0x0 startup.o
+ *(.bss*)
+ *(COMMON)
+                0x20000004                . = ALIGN (0x4)
+                0x20000004                _bss_end = .
+                0x20000004                __bss_end__ = _bss_end
+                0x00000400                _stack_size = 0x400
+                0x20008000                _stack_end = (ORIGIN (SRAM) + LENGTH (SRAM))
+                0x20007c00                _stack_begin = (_stack_end - _stack_size)
+                0x20007c00                . = _stack_begin
+
+._stack         0x20000004      0x400 load address 0x080005f0
+                0x20000404                . = (. + _stack_size)
+ *fill*         0x20000004      0x400 
+LOAD main.o
+LOAD startup.o
+OUTPUT(blink.elf elf32-littlearm)
+
+.debug_info     0x00000000      0xbf9
+ .debug_info    0x00000000      0xb08 main.o
+ .debug_info    0x00000b08       0xf1 startup.o
+
+.debug_abbrev   0x00000000      0x2f8
+ .debug_abbrev  0x00000000      0x24d main.o
+ .debug_abbrev  0x0000024d       0xab startup.o
+
+.debug_aranges  0x00000000       0x40
+ .debug_aranges
+                0x00000000       0x20 main.o
+ .debug_aranges
+                0x00000020       0x20 startup.o
+
+.debug_line     0x00000000      0x1ba
+ .debug_line    0x00000000      0x16a main.o
+ .debug_line    0x0000016a       0x50 startup.o
+
+.debug_str      0x00000000      0x77a
+ .debug_str     0x00000000      0x6d5 main.o
+                                0x708 (size before relaxing)
+ .debug_str     0x000006d5       0xa5 startup.o
+                                0x161 (size before relaxing)
+
+.comment        0x00000000       0x6e
+ .comment       0x00000000       0x6e main.o
+                                 0x6f (size before relaxing)
+ .comment       0x0000006e       0x6f startup.o
+
+.ARM.attributes
+                0x00000000       0x33
+ .ARM.attributes
+                0x00000000       0x33 main.o
+ .ARM.attributes
+                0x00000033       0x33 startup.o
+
+.debug_frame    0x00000000      0x29c
+ .debug_frame   0x00000000      0x250 main.o
+ .debug_frame   0x00000250       0x4c startup.o

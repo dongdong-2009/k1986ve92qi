@@ -15,6 +15,7 @@ int sleep(uint32_t ms)
 
 int main()
 {
+	//while(1);
 	ClkConfig();
 	PortConfig();
 	while(1)
@@ -28,6 +29,13 @@ int main()
 //--- Ports configuration ---
 void PortConfig()
 {
+	MDR_RST_CLK->PER_CLOCK |= 1<<21;	 	//clock of PORTA ON	
+	MDR_PORTA->FUNC = 0;
+	MDR_PORTA->RXTX = 0; 
+	MDR_PORTA->OE = 0xff;					/* output mode */
+	MDR_PORTA->ANALOG = 0xff;				/* digital mode */
+	MDR_PORTA->PWR = 0xffff;				/* max power */	
+	
 	MDR_RST_CLK->PER_CLOCK|=1<<22;	 				//clock of PORTB ON
 	
 	MDR_PORTB->FUNC |= (0x00<<0);  	/* mode is port */
@@ -36,8 +44,8 @@ void PortConfig()
 	MDR_PORTB->ANALOG |= (0x01<<0);			/* port is digital mode */
 	MDR_PORTB->PWR |= (0x3<<0);		/* max power of port */
 }
-
-#define CPU_PLL_MULT 10 // PLL_CLK 80 MHz for 8 MHz ext oscillator
+	
+#define CPU_PLL_MULT 10	 // PLL_CLK 80 MHz for 8 MHz ext oscillator
 #define EEPROM_DEL 4
 #define SYS_TICKS 80000 // 1ms for 80 MHz
 //#define SYS_TICKS 8000000 // 100ms
@@ -73,4 +81,3 @@ void SysTick_Handler(void)
 	MDR_PORTB->RXTX ^= 1; // PB0
 	system_time ++;
 }
-
