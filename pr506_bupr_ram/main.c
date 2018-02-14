@@ -18,11 +18,15 @@ extern void set_ram_vt();
 extern void system_init();
 extern uint32_t system_time;
 
+extern uint8_t uart_buf[16];
+extern uint32_t uart_rxidx;
+
 int32_t refpos = 0;
 int32_t reflinpos = 0;
 int32_t startlinpos = 0;
 int32_t startphase = 0;
 int32_t linpos = 0;
+uint32_t tcnt = 0;	
 
 int sleep(uint32_t ms)
 {
@@ -81,7 +85,7 @@ static inline void encoder_start(void)
 
 void TIMER3_Handler(void)
 {
-	MDR_PORTA->RXTX ^= 0x01; // PA0	
+	//MDR_PORTA->RXTX ^= 0x01; // PA0	
 	MDR_TIMER3->STATUS = 0;
 	encoder_start();
 	//MDR_ADC->ADC1_CFG |= ADC1_CFG_REG_GO; 	// start adc conversion	
@@ -112,6 +116,31 @@ static inline void debug_signal(int32_t s)
 	MDR_DAC->DAC2_DATA = s+2048;
 }
 
+int32_t update_position(void)
+{
+	static int32_t pos = 0;
+	uint8_t buf[16];
+	
+	if(MDR_UART1->MIS & (1<<UART_MIS_RTMIS_Pos))
+	{
+		// RX timeout has occured		
+		int i = 0;
+		//MDR_PORTA->RXTX ^= 0x01; // PA0	
+		
+		while(0 == (MDR_UART1->FR & (1<<UART_FR_RXFE_Pos))) {
+			buf[i] = MDR_UART1->DR; // empting the fifo
+			i = (i+1) & 0x0f;
+		}
+		
+		int16_t ref1 = (buf[0] + (buf[1]<<8))<<4;
+		ref1 = ref1>>4;
+		//debug_signal(ref1);			
+		pos = ref1;
+	}				
+	
+	return pos<<6;	
+}
+
 __attribute__ ((section(".main_sec")))
 int main()
 {
@@ -120,7 +149,6 @@ int main()
 	int i = 0;
 	int32_t ia, ib, ic;	
 	int32_t dca = 0, dcc = 0;	
-	uint32_t tcnt = 0;	
 	int32_t ed, eq, es;
 	int32_t vd, vq;
 	struct pi_reg_state dreg;
@@ -160,32 +188,38 @@ int main()
 		
 		startphase += enc_crc(MDR_SSP1->DR);
 	}
-	
+
 	dca = dca >> 10;
 	dcc = dcc >> 10;
 	startphase = startphase >> 10;
-	
-	refpos = 500000 - startphase;
-	
+
+	refpos = startphase;
+
 	while(1){
+		//MDR_PORTA->RXTX |= 0x01; // PA0	
 		adc_dma_wait();
-		
+		//MDR_PORTA->RXTX &= ~0x01; // PA0	
+
 		// get the currents from ADC	
 		ia = (0xfff&(adc_dma_buffer[1])) - dca;
 		ic = (0xfff&(adc_dma_buffer[0])) - dcc;
 		ib = ia+ic;		
-					
+
 		code = enc_crc(MDR_SSP1->DR);
 		phase = code & (1024-1);								
-		//MDR_DAC->DAC2_DATA = code;		
-		
+		//MDR_DAC->DAC2_DATA = code;			
+
 		tcnt++;
 		if( (0x0007 & tcnt) == 0){			
 			// 3kHz
+			MDR_PORTA->RXTX |= 0x01; // PA0	
+			
+			refpos = update_position() - startphase;			
+			
 			speed = get_speed(code, &position);				
 			//debug_signal(speed);
 			debug_signal((startphase-position)>>6);
-			
+					
 			reg_update(&preg, (refpos - position), 0);
 			refspeed = preg.y>>12;			
 			//refspeed = -500;
@@ -194,13 +228,15 @@ int main()
 			qref = sreg.y>>12;
 			if(qref > MAXQCURR) qref = MAXQCURR;
 			if(qref < -MAXQCURR) qref = -MAXQCURR;
+			
+			MDR_PORTA->RXTX &= ~0x01; // PA0	
 		}
 		
 		
-		if( (0x7fff&tcnt) == 0){
+		/*if( (0x7fff&tcnt) == 0){
 			if(refpos == 50000 - startphase) refpos = -50000 - startphase; 
 			else refpos = 50000 - startphase;
-		}				
+		}*/				
 		
 		/*if( (0x7fff&tcnt) == 0){
 			if(refspeed == -1000) refspeed = 1000;
@@ -271,7 +307,8 @@ int main()
 		
 		pwm_seta(abc[0]);
 		pwm_setb(abc[1]);
-		pwm_setc(abc[2]);				
+		pwm_setc(abc[2]);	
+	
 	}	
 
 	/*

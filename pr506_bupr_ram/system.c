@@ -2,9 +2,13 @@
 
 void SysTick_Handler(void);
 extern void TIMER3_Handler(void);
+void UART1_Handler(void);
 
 uint32_t system_time;
 void (* table_interrupt_vector[48])(void) __attribute__((aligned (4*64)));
+
+uint8_t uart_buf[16];
+uint32_t uart_rxidx = 0;
 
 //--- Ports configuration ---
 void PortConfig()
@@ -15,7 +19,8 @@ void PortConfig()
 	MDR_PORTA->OE = 0xff;					/* output mode */
 	MDR_PORTA->ANALOG = 0xffff;				/* digital mode */
 	MDR_PORTA->PWR = 0xffff;				/* max power */
-	
+
+	// port B
 	// порты для ssp PB13-CLK PB14-RXD
 	MDR_RST_CLK->PER_CLOCK |= 1<<22;	 						/* clock of PORTB ON */
 	MDR_PORTB->FUNC &= ~( (0x3<<(13<<1)) + (0x3<<(14<<1)) );
@@ -24,6 +29,13 @@ void PortConfig()
 	MDR_PORTB->PWR |= (0x3<<(13<<1)) + (0x3<<(14<<1));							/* max power of port */
 	MDR_PORTB->OE |= (1<<13);
 	MDR_PORTB->OE &= ~(1<<14);
+	
+	// порты для uart1 PB5-TXD PB6-RXD
+	MDR_PORTB->FUNC &= ~( (0x3<<(5<<1)) + (0x3<<(6<<1)) );
+	MDR_PORTB->FUNC |= ( (0x2<<(5<<1)) + (0x02<<(6<<1)) );  			/* альтернативная функция */
+	MDR_PORTB->ANALOG |= (1<<5) + (1<<6);								/* digital */
+	MDR_PORTB->PWR |= (0x3<<(5<<1)) + (0x3<<(6<<1));					/* max power of port */
+	//MDR_PORTB->OE |= (1<<1);
 	
 	/* port C
 	 * PC0 		nRE_1
@@ -63,6 +75,7 @@ void PortConfig()
 	// inputs for adc
 	MDR_RST_CLK->PER_CLOCK |= 1<<24;	 				//clock of PORTD ON	
 	MDR_PORTD->ANALOG &= ~( (1<<7) + (1<<8) ); 			// PD5...PD11 входы АЦП
+	
 }
 
 void ClkConfig(void)
@@ -170,9 +183,40 @@ void set_ram_vt()
 	// set vtor
 	SCB->VTOR = ((uint32_t)table_interrupt_vector);
 	table_interrupt_vector[15] = SysTick_Handler;
+	table_interrupt_vector[22] = UART1_Handler;	
 	table_interrupt_vector[32] = TIMER3_Handler;
 	//table_interrupt_vector[33] = ADC_Handler;
 	
+}
+
+void uart_init(void)
+{
+	uart_rxidx = 0;
+	
+	// UART_CLK = 80MHz
+	// rate = 115200 k
+	// div = 80000/16/115.2 = 43.4028
+	MDR_RST_CLK->PER_CLOCK |= (1 << 6);													// enable clock UART1
+	MDR_RST_CLK->UART_CLOCK |= (1 << 24);	
+	
+	//MDR_UART1->IBRD = 43;																// 43
+	//MDR_UART1->FBRD = 26;																// round(0.4028*2^6) = 26
+
+	MDR_UART1->IBRD = 4; // rate = 1250k
+	MDR_UART1->FBRD = 0;
+
+	MDR_UART1->IFLS &= ~(UART_IFLS_RXIFLSEL_Msk | UART_IFLS_TXIFLSEL_Msk);
+	MDR_UART1->IFLS |= (1 << UART_IFLS_RXIFLSEL_Pos) | (1 << UART_IFLS_TXIFLSEL_Pos);  			// threshold for FIFO is 1/4
+	MDR_UART1->LCR_H |= (1<<UART_LCR_H_FEN_Pos);												// enable FIFO
+	MDR_UART1->LCR_H |= (3 << UART_LCR_H_WLEN_Pos);												// word length is 8 bit
+	MDR_UART1->CR |= ((1<<UART_CR_RXE_Pos) | (1<<UART_CR_TXE_Pos) | (1<<UART_CR_UARTEN_Pos));	// enable uart 
+	
+	// config uart irq
+	//MDR_UART1->IMSC |= (UART_IMSC_RXIM | UART_IMSC_TXIM);
+	//MDR_UART1->IMSC |= ((1<<UART_IMSC_RXIM_Pos) | (1<<UART_IMSC_RTIM_Pos));	// en irq from rx and
+	//MDR_UART1->IMSC |= (1<<UART_IMSC_RXIM_Pos);									// en irq from rx and
+	MDR_UART1->IMSC |= ((1<<UART_IMSC_RTIM_Pos));								// en irq from rx and
+	//NVIC_EnableIRQ(UART1_IRQn);
 }
 
 void system_init()
@@ -181,9 +225,28 @@ void system_init()
 	ClkConfig();
 	PortConfig();
 	TimerConfig();
+	uart_init();
 }
 
 void SysTick_Handler(void)
 {
 	system_time ++;
+}
+
+void UART1_Handler(void)
+{
+	MDR_PORTA->RXTX ^= 0x01; // PA0	
+	
+	if(MDR_UART1->MIS & (1<<UART_MIS_RTMIS_Pos))
+	//if(MDR_UART1->MIS & (1<<UART_MIS_RXMIS_Pos))
+	{
+		//MDR_PORTA->RXTX |= 0x01; // PA0	
+		// RX timeout has occured
+		while(0 == (MDR_UART1->FR & (1<<UART_FR_RXFE_Pos))) {
+			char buf = MDR_UART1->DR; // empting the fifo
+			//uart_buf[uart_rxidx] = MDR_UART1->DR; // empting the fifo
+			//uart_rxidx = (uart_rxidx+1) & 0x0f;
+		}
+		//MDR_PORTA->RXTX &= ~0x01; // PA0	
+	}		
 }
