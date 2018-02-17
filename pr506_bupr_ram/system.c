@@ -1,6 +1,7 @@
 #include "gdef.h"
 
 void SysTick_Handler(void);
+extern void TIMER1_Handler(void);
 extern void TIMER3_Handler(void);
 void UART1_Handler(void);
 
@@ -102,6 +103,21 @@ void ClkConfig(void)
 
 void TimerConfig(void)
 {
+	// enable TIM1
+
+	MDR_RST_CLK->PER_CLOCK |= (1 << 14);
+	MDR_RST_CLK->TIM_CLOCK &= ~(0xff << 0);
+	MDR_RST_CLK->TIM_CLOCK |= (1 << 24);
+	
+	MDR_TIMER1->CNT = 0;
+	MDR_TIMER1->PSG = 24 - 1;
+	MDR_TIMER1->ARR = 1024 - 1;
+	
+	MDR_TIMER1->IE |= TIMER_IE_CNT_ARR_EVENT_IE;					// прерывание по событию  ARR=CNT
+//	NVIC_EnableIRQ(Timer1_IRQn); 									// enable in nvic int from tim3	
+	MDR_TIMER1->CNTRL = TIMER_CNTRL_CNT_EN; 						// start count up	
+
+	
 	// enable TIM3
 	MDR_RST_CLK->PER_CLOCK |= (1 << 16);
 	MDR_RST_CLK->TIM_CLOCK &= ~(0xff << 16);
@@ -184,6 +200,7 @@ void set_ram_vt()
 	SCB->VTOR = ((uint32_t)table_interrupt_vector);
 	table_interrupt_vector[15] = SysTick_Handler;
 	table_interrupt_vector[22] = UART1_Handler;	
+	table_interrupt_vector[30] = TIMER1_Handler;
 	table_interrupt_vector[32] = TIMER3_Handler;
 	//table_interrupt_vector[33] = ADC_Handler;
 	
@@ -206,7 +223,7 @@ void uart_init(void)
 	MDR_UART1->FBRD = 0;
 
 	MDR_UART1->IFLS &= ~(UART_IFLS_RXIFLSEL_Msk | UART_IFLS_TXIFLSEL_Msk);
-	MDR_UART1->IFLS |= (1 << UART_IFLS_RXIFLSEL_Pos) | (1 << UART_IFLS_TXIFLSEL_Pos);  			// threshold for FIFO is 1/4
+	MDR_UART1->IFLS |= (2 << UART_IFLS_RXIFLSEL_Pos) | (1 << UART_IFLS_TXIFLSEL_Pos);  			// threshold for FIFO is 1/2
 	MDR_UART1->LCR_H |= (1<<UART_LCR_H_FEN_Pos);												// enable FIFO
 	MDR_UART1->LCR_H |= (3 << UART_LCR_H_WLEN_Pos);												// word length is 8 bit
 	MDR_UART1->CR |= ((1<<UART_CR_RXE_Pos) | (1<<UART_CR_TXE_Pos) | (1<<UART_CR_UARTEN_Pos));	// enable uart 
@@ -214,9 +231,11 @@ void uart_init(void)
 	// config uart irq
 	//MDR_UART1->IMSC |= (UART_IMSC_RXIM | UART_IMSC_TXIM);
 	//MDR_UART1->IMSC |= ((1<<UART_IMSC_RXIM_Pos) | (1<<UART_IMSC_RTIM_Pos));	// en irq from rx and
-	//MDR_UART1->IMSC |= (1<<UART_IMSC_RXIM_Pos);									// en irq from rx and
+	MDR_UART1->IMSC |= (1<<UART_IMSC_RXIM_Pos);									// en irq from rx and
 	MDR_UART1->IMSC |= ((1<<UART_IMSC_RTIM_Pos));								// en irq from rx and
+	
 	//NVIC_EnableIRQ(UART1_IRQn);
+
 }
 
 void system_init()
@@ -226,6 +245,10 @@ void system_init()
 	PortConfig();
 	TimerConfig();
 	uart_init();
+	
+	//NVIC_SetPriorityGrouping(0); 
+	//NVIC_SetPriority(Timer3_IRQn, 1);	
+	//NVIC_SetPriority(UART1_IRQn, 0);	
 }
 
 void SysTick_Handler(void)
@@ -233,12 +256,15 @@ void SysTick_Handler(void)
 	system_time ++;
 }
 
+extern uint32_t tcnt;	
+extern uint32_t tpll;
+
 void UART1_Handler(void)
 {
-	MDR_PORTA->RXTX ^= 0x01; // PA0	
+	//MDR_PORTA->RXTX |= 0x01; // PA0	
 	
-	if(MDR_UART1->MIS & (1<<UART_MIS_RTMIS_Pos))
-	//if(MDR_UART1->MIS & (1<<UART_MIS_RXMIS_Pos))
+	//if(MDR_UART1->MIS & (1<<UART_MIS_RTMIS_Pos))
+	if(MDR_UART1->MIS & (1<<UART_MIS_RXMIS_Pos))
 	{
 		//MDR_PORTA->RXTX |= 0x01; // PA0	
 		// RX timeout has occured
@@ -247,6 +273,21 @@ void UART1_Handler(void)
 			//uart_buf[uart_rxidx] = MDR_UART1->DR; // empting the fifo
 			//uart_rxidx = (uart_rxidx+1) & 0x0f;
 		}
-		//MDR_PORTA->RXTX &= ~0x01; // PA0	
+		//MDR_PORTA->RXTX &= ~0x01; // PA0
+		
+		uint16_t t = MDR_TIMER1->CNT; 
+		uint16_t tr = MDR_TIMER1->ARR >> 1;
+		if(t < tr) MDR_TIMER1->CNT -= 1;
+		else MDR_TIMER1->CNT += 1;
 	}		
+	
+	if(MDR_UART1->MIS & (1<<UART_MIS_RTMIS_Pos)){
+		//MDR_PORTA->RXTX |= 0x01; // PA0	
+		while(0 == (MDR_UART1->FR & (1<<UART_FR_RXFE_Pos))) {
+			char buf = MDR_UART1->DR; // empting the fifo
+		}
+		//MDR_PORTA->RXTX &= ~0x01; // PA0	
+	}
+	
+	//MDR_PORTA->RXTX &= ~0x01; // PA0	
 }

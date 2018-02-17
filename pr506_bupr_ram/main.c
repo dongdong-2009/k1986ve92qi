@@ -26,7 +26,22 @@ int32_t reflinpos = 0;
 int32_t startlinpos = 0;
 int32_t startphase = 0;
 int32_t linpos = 0;
+
 uint32_t tcnt = 0;	
+uint32_t tpll = 0;	
+uint32_t fpll = 0;
+
+int32_t position = 0;
+
+struct STR_BUPR_TLM{
+	int16_t pos;
+	uint16_t pcur;
+	uint16_t cw;
+	uint16_t crc;
+};
+	
+struct STR_BUPR_TLM telemetry;
+	
 
 int sleep(uint32_t ms)
 {
@@ -83,6 +98,10 @@ static inline void encoder_start(void)
 	MDR_SSP1->DR = 0x555; // start encoder request<---->
 }
 
+void TIMER1_Handler(void)
+{
+}
+
 void TIMER3_Handler(void)
 {
 	//MDR_PORTA->RXTX ^= 0x01; // PA0	
@@ -116,12 +135,40 @@ static inline void debug_signal(int32_t s)
 	MDR_DAC->DAC2_DATA = s+2048;
 }
 
+void update_telemetry(void)
+{
+	int i;
+	uint8_t *p = (uint8_t *)&telemetry;
+	
+	/*telemetry.cw = 0;
+	telemetry.pos = position;
+	telemetry.pcur = 0;
+	telemetry.crc = 0;
+	*/
+	
+	// filling the fifo
+/*	for(i = 0; i < 8; i ++){
+		MDR_UART1->DR = *p++;
+	}
+	*/
+	
+	MDR_UART1->DR = *p++;
+	MDR_UART1->DR = *p++;	
+	MDR_UART1->DR = *p++;	
+	MDR_UART1->DR = *p++;	
+	MDR_UART1->DR = *p++;	
+	MDR_UART1->DR = *p++;	
+	MDR_UART1->DR = *p++;	
+	MDR_UART1->DR = *p++;			
+}
+
 int32_t update_position(void)
 {
 	static int32_t pos = 0;
 	uint8_t buf[16];
 	
-	if(MDR_UART1->MIS & (1<<UART_MIS_RTMIS_Pos))
+	//if(MDR_UART1->MIS & (1<<UART_MIS_RTMIS_Pos))
+	if(MDR_UART1->MIS & (1<<UART_MIS_RXMIS_Pos))
 	{
 		// RX timeout has occured		
 		int i = 0;
@@ -135,8 +182,29 @@ int32_t update_position(void)
 		int16_t ref1 = (buf[0] + (buf[1]<<8))<<4;
 		ref1 = ref1>>4;
 		//debug_signal(ref1);			
-		pos = ref1;
-	}				
+		pos = ref1;		
+		
+		// pll
+		//tpll = tcnt;
+		//fpll = 10;
+					
+		//if((tcnt&127) < 120) tcnt+=4;
+		//else tcnt-=4;
+		//MDR_PORTA->RXTX ^= 0x01; // PA0
+		
+		uint16_t t = 1023&(MDR_TIMER1->CNT+380);
+		if(t < 512) MDR_TIMER1->CNT += 1;
+		else MDR_TIMER1->CNT -= 1;
+
+	}	
+
+	if(MDR_UART1->MIS & (1<<UART_MIS_RTMIS_Pos)){
+		//MDR_PORTA->RXTX |= 0x01; // PA0	
+		while(0 == (MDR_UART1->FR & (1<<UART_FR_RXFE_Pos))) {
+			char buf = MDR_UART1->DR; // empting the fifo
+		}
+		//MDR_PORTA->RXTX &= ~0x01; // PA0
+	}
 	
 	return pos<<6;	
 }
@@ -159,7 +227,6 @@ int main()
 	int32_t qref = 0;	
 	int32_t speed;
 	int32_t refspeed = 0;	
-	int32_t position = 0;	
 	uint32_t phase = 0;
 	int32_t dq[2];	
 	int32_t abc[3];		
@@ -194,7 +261,7 @@ int main()
 	startphase = startphase >> 10;
 
 	refpos = startphase;
-
+	
 	while(1){
 		//MDR_PORTA->RXTX |= 0x01; // PA0	
 		adc_dma_wait();
@@ -208,13 +275,19 @@ int main()
 		code = enc_crc(MDR_SSP1->DR);
 		phase = code & (1024-1);								
 		//MDR_DAC->DAC2_DATA = code;			
+		
+		refpos = update_position() - startphase;
 
 		tcnt++;
-		if( (0x0007 & tcnt) == 0){			
+		
+		//if( (0x0007 & tcnt) == 0){
+		if(MDR_TIMER1->STATUS & TIMER_STATUS_CNT_ARR_EVENT){
+			MDR_TIMER1->STATUS = 0;
+				
 			// 3kHz
 			MDR_PORTA->RXTX |= 0x01; // PA0	
 			
-			refpos = update_position() - startphase;			
+			//refpos = update_position() - startphase;
 			
 			speed = get_speed(code, &position);				
 			//debug_signal(speed);
@@ -222,17 +295,60 @@ int main()
 					
 			reg_update(&preg, (refpos - position), 0);
 			refspeed = preg.y>>12;			
-			//refspeed = -500;
+			//refspeed = 2000;
 			
 			reg_update(&sreg, ((refspeed - speed)), 0);
 			qref = sreg.y>>12;
 			if(qref > MAXQCURR) qref = MAXQCURR;
 			if(qref < -MAXQCURR) qref = -MAXQCURR;
 			
-			MDR_PORTA->RXTX &= ~0x01; // PA0	
+			update_telemetry();
+			
+			MDR_PORTA->RXTX &= ~0x01; // PA0
 		}
+
+		/*if((127 & tcnt) == 0){		
+			MDR_PORTA->RXTX |= 0x01; // PA0	
+			update_telemetry();
+			MDR_PORTA->RXTX &= ~0x01; // PA0				
+		}*/
+
 		
-		
+/*
+  		if( (127 & tcnt) == 127){			
+			uint32_t t = (tpll & 127);
+				
+			if( t < 64) tcnt--;
+			else  tcnt ++;
+
+			//if( (t > 125) || (t < 3) ){
+			if(t > 64){
+				//MDR_PORTA->RXTX |= 0x01; // PA0	
+				update_telemetry();
+				//MDR_PORTA->RXTX &= ~0x01; // PA0	
+			}
+		}
+*/
+/*
+  		if( fpll && ((127 & tcnt) == 127)){
+			
+			//fpll = 0;
+			uint32_t t = (tpll & 127);
+				
+			if( t < 64) tcnt--;
+			else  if( t > 64) tcnt ++;			
+
+			if( (t > 125) || (t < 3) ){
+			fpll = 0;
+			//if( (tpll & 127) == (tcnt & 127)){
+			MDR_PORTA->RXTX |= 0x01; // PA0	
+			update_telemetry();
+			MDR_PORTA->RXTX &= ~0x01; // PA0	
+			}
+		}
+*/				
+
+
 		/*if( (0x7fff&tcnt) == 0){
 			if(refpos == 50000 - startphase) refpos = -50000 - startphase; 
 			else refpos = 50000 - startphase;
