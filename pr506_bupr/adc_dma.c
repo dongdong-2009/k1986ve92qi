@@ -18,6 +18,7 @@ struct DMA_CTR_STRUCT
 struct DMA_CTR_STRUCT			dma_ctr_str[32]			__attribute__ ((section(".dma_sec")));
 uint32_t						adc_dma_buffer[8]		__attribute__ ((section(".dma_sec")));
 
+
 void adc_init()
 {
 	MDR_RST_CLK->PER_CLOCK |= (1<<17);
@@ -37,6 +38,7 @@ void adc_init()
 
 void dma_init(void)
 {
+
 	MDR_RST_CLK->PER_CLOCK |= 1<<5;
 
 	MDR_DMA->CTRL_BASE_PTR = (int32_t)dma_ctr_str;

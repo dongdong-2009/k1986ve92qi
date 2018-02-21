@@ -225,11 +225,18 @@ int32_t svpwm(int32_t *abc, int32_t *dq, int32_t phase)
 	return fs;
 }
 
+static int32_t enc1 = 0;
+static int32_t enc2 = 0;
+
+void encoder_init(int32_t s)
+{
+	enc1 = s;
+	enc2 = s;
+}
+
 int32_t get_speed(int32_t enc, int32_t *pos)
 {
 	int32_t denc;
-	static int32_t enc1 = 0;
-	static int32_t enc2 = 0;
 	int32_t rate = 60*(120000000/5/1024/8);
 	
 	denc = (enc-enc2);

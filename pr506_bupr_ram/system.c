@@ -17,9 +17,14 @@ void PortConfig()
 	MDR_RST_CLK->PER_CLOCK |= 1<<21;	 	//clock of PORTA ON	
 	MDR_PORTA->FUNC = 0;
 	MDR_PORTA->RXTX = 0; 
-	MDR_PORTA->OE = 0xff;					/* output mode */
-	MDR_PORTA->ANALOG = 0xffff;				/* digital mode */
-	MDR_PORTA->PWR = 0xffff;				/* max power */
+	// pa0 - test out
+	MDR_PORTA->OE |= 1<<0;
+	MDR_PORTA->ANALOG |= 1<<0;
+	MDR_PORTA->PWR |= (0xff << (0<<1));
+	// pa3 - tmr1_ch2
+	MDR_PORTA->OE &= ~(1<<3);				// вход
+	MDR_PORTA->ANALOG |= 1<<3;				// цифра
+	MDR_PORTA->FUNC = (0x2<<(3<<1));		// альтернативная функц - tmr1_ch2
 
 	// port B
 	// порты для ssp PB13-CLK PB14-RXD
@@ -104,18 +109,21 @@ void ClkConfig(void)
 void TimerConfig(void)
 {
 	// enable TIM1
-
 	MDR_RST_CLK->PER_CLOCK |= (1 << 14);
 	MDR_RST_CLK->TIM_CLOCK &= ~(0xff << 0);
 	MDR_RST_CLK->TIM_CLOCK |= (1 << 24);
 	
 	MDR_TIMER1->CNT = 0;
-	MDR_TIMER1->PSG = 24 - 1;
-	MDR_TIMER1->ARR = 1024 - 1;
+	//MDR_TIMER1->PSG = 9 - 1;
+	//MDR_TIMER1->ARR = 2963 - 1;
+	MDR_TIMER1->PSG = 80 - 1;
+	MDR_TIMER1->ARR = 1000 - 1;	
+	
+	MDR_TIMER1->CH2_CNTRL |= (1<<15);		// capture mode on tmr1_ch2
 	
 	MDR_TIMER1->IE |= TIMER_IE_CNT_ARR_EVENT_IE;					// прерывание по событию  ARR=CNT
-//	NVIC_EnableIRQ(Timer1_IRQn); 									// enable in nvic int from tim3	
 	MDR_TIMER1->CNTRL = TIMER_CNTRL_CNT_EN; 						// start count up	
+	//NVIC_EnableIRQ(Timer1_IRQn); 									// enable in nvic int from tim1
 
 	
 	// enable TIM3
@@ -223,7 +231,7 @@ void uart_init(void)
 	MDR_UART1->FBRD = 0;
 
 	MDR_UART1->IFLS &= ~(UART_IFLS_RXIFLSEL_Msk | UART_IFLS_TXIFLSEL_Msk);
-	MDR_UART1->IFLS |= (2 << UART_IFLS_RXIFLSEL_Pos) | (1 << UART_IFLS_TXIFLSEL_Pos);  			// threshold for FIFO is 1/2
+	MDR_UART1->IFLS |= (2 << UART_IFLS_RXIFLSEL_Pos) | (2 << UART_IFLS_TXIFLSEL_Pos);  			// threshold for FIFO is 1/2
 	MDR_UART1->LCR_H |= (1<<UART_LCR_H_FEN_Pos);												// enable FIFO
 	MDR_UART1->LCR_H |= (3 << UART_LCR_H_WLEN_Pos);												// word length is 8 bit
 	MDR_UART1->CR |= ((1<<UART_CR_RXE_Pos) | (1<<UART_CR_TXE_Pos) | (1<<UART_CR_UARTEN_Pos));	// enable uart 
@@ -231,8 +239,8 @@ void uart_init(void)
 	// config uart irq
 	//MDR_UART1->IMSC |= (UART_IMSC_RXIM | UART_IMSC_TXIM);
 	//MDR_UART1->IMSC |= ((1<<UART_IMSC_RXIM_Pos) | (1<<UART_IMSC_RTIM_Pos));	// en irq from rx and
-	MDR_UART1->IMSC |= (1<<UART_IMSC_RXIM_Pos);									// en irq from rx and
-	MDR_UART1->IMSC |= ((1<<UART_IMSC_RTIM_Pos));								// en irq from rx and
+	MDR_UART1->IMSC |= (1<<UART_IMSC_RXIM_Pos);									// en irq from rx fifo
+	MDR_UART1->IMSC |= ((1<<UART_IMSC_RTIM_Pos));								// en irq from rx timeout
 	
 	//NVIC_EnableIRQ(UART1_IRQn);
 
@@ -247,8 +255,8 @@ void system_init()
 	uart_init();
 	
 	//NVIC_SetPriorityGrouping(0); 
-	//NVIC_SetPriority(Timer3_IRQn, 1);	
-	//NVIC_SetPriority(UART1_IRQn, 0);	
+	//NVIC_SetPriority(Timer1_IRQn, 3);	
+	//NVIC_SetPriority(Timer3_IRQn, 0);
 }
 
 void SysTick_Handler(void)

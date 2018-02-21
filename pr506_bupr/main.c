@@ -105,7 +105,7 @@ static inline void encoder_start(void)
 	MDR_SSP1->DR = 0x555; // start encoder request<---->
 }
 
-void TIMER1_Handler(void)
+void Timer1_IRQHandler(void)
 {
 	MDR_TIMER1->STATUS = 0;
 	//MDR_PORTA->RXTX |= 0x01; // PA0
@@ -115,7 +115,7 @@ void TIMER1_Handler(void)
 	//ttlm = 1;	
 }
 
-void TIMER3_Handler(void)
+void Timer3_IRQHandler(void)
 {
 	//MDR_PORTA->RXTX ^= 0x01; // PA0	
 	MDR_TIMER3->STATUS = 0;
@@ -223,7 +223,6 @@ int32_t update_refposition(void)
 
 extern void encoder_init(int32_t s);
 
-__attribute__ ((section(".main_sec")))
 int main()
 {
 	uint32_t code;
