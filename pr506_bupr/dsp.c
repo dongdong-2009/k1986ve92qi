@@ -256,13 +256,13 @@ int32_t mfilter(int32_t x)
 {
 	static int32_t j = 0;
 	static int32_t a = 0;
-	static int32_t b[32] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};	
+	static int32_t b[MFORDER]; // = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};	
 	
-	j = (j+1)&(32-1);
+	j = (j+1)&(MFORDER-1);
 	a = a-b[j]+x;
 	b[j] = x;
 	
-	return a>>5;
+	return a;
 }
 
 int32_t rfilter1(int32_t x)

@@ -30,4 +30,6 @@ struct pi_reg_state{
 
 #define MAXQCURR 1000
 
+#define MFORDER 1024
+
 #endif

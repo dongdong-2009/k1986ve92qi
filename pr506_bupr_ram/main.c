@@ -35,6 +35,8 @@ uint32_t ttlm = 0;
 int32_t position = 0;
 uint32_t encoder_code;
 
+int32_t pcurrent = 0;
+
 static inline void debug_signal(int32_t s)
 {
 	MDR_DAC->DAC2_DATA = s+2048;
@@ -152,7 +154,7 @@ static inline void update_telemetry(void)
 	if(MDR_TIMER1->STATUS & TIMER_STATUS_CNT_ARR_EVENT){
 		MDR_TIMER1->STATUS = 0;
 		
-		MDR_PORTA->RXTX |= 0x01; // PA0	
+		//MDR_PORTA->RXTX |= 0x01; // PA0	
 		
 		// update pll
 		//uint16_t t = MDR_TIMER1->CCR2+300;
@@ -164,7 +166,7 @@ static inline void update_telemetry(void)
 		// fill the telemetry array
 		telemetry.refpos = refpos - startphase;
 		telemetry.pos = position - startphase;
-		telemetry.pcur = 0;
+		telemetry.pcur = pcurrent >> 10;
 		telemetry.crc = 0;
 		
 		p = (uint8_t *)&telemetry;	
@@ -179,7 +181,7 @@ static inline void update_telemetry(void)
 		MDR_UART1->DR = *p++;	
 		MDR_UART1->DR = *p++;			
 	
-		MDR_PORTA->RXTX &= ~0x01; // PA0	
+		//MDR_PORTA->RXTX &= ~0x01; // PA0	
 	}		
 }
 
@@ -268,6 +270,7 @@ int main()
 		dcc += (0xfff&(adc_dma_buffer[0]));	
 		
 		startphase += enc_crc(MDR_SSP1->DR);
+		mfilter(0, 0);
 	}
 
 	dca = dca >> 10;
@@ -277,11 +280,12 @@ int main()
 	refpos = 0;
 	position = startphase;
 	encoder_init(startphase);
+	pcurrent = 0;
 	
 	while(1){
-		//MDR_PORTA->RXTX |= 0x01; // PA0	
+		MDR_PORTA->RXTX |= 0x01; // PA0	
 		adc_dma_wait();
-		//MDR_PORTA->RXTX &= ~0x01; // PA0	
+		MDR_PORTA->RXTX &= ~0x01; // PA0	
 
 		// get the currents from ADC	
 		ia = (0xfff&(adc_dma_buffer[1])) - dca;
@@ -308,16 +312,18 @@ int main()
 			speed = get_speed(code, &position);		
 			//position = position - startphase;
 			//debug_signal(speed);
-			debug_signal((startphase-position)>>0);
+			//debug_signal((startphase-position)>>0);
 					
 			reg_update(&preg, (refpos - position), 0);
 			refspeed = preg.y>>12;			
-			//refspeed = 2000;
+			refspeed = 1000;
 			
 			reg_update(&sreg, ((refspeed - speed)), 0);
 			qref = sreg.y>>12;
 			if(qref > MAXQCURR) qref = MAXQCURR;
 			if(qref < -MAXQCURR) qref = -MAXQCURR;
+				
+			//qref = 100;
 				
 			//MDR_PORTA->RXTX &= ~0x01; // PA0
 		}
@@ -417,12 +423,19 @@ int main()
 		abc[1] = ib;
 		abc[2] = ic;
 		abc_to_dq(abc, dq, phase);
-
+		
+		// power current
+		int32_t ang, mag;
+		//cord_atan(dq, &ang, &mag);
+		mag = abs(dq[0]) + abs(dq[1]);
+		pcurrent = mfilter(mag, pcurrent);
+		
 		// get the errors
 		ed = 0 - dq[0];
 		eq = qref - dq[1];
 		
 		//debug_signal(dq[1]<<2);		
+		debug_signal(pcurrent >> 10);
 		
 		// currents regulators do its work
 		reg_update(&dreg, ed , fsat);

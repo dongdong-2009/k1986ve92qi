@@ -35,6 +35,8 @@ uint32_t ttlm = 0;
 int32_t position = 0;
 uint32_t encoder_code;
 
+int32_t pcurrent = 0;
+
 static inline void debug_signal(int32_t s)
 {
 	MDR_DAC->DAC2_DATA = s+2048;
@@ -164,7 +166,7 @@ static inline void update_telemetry(void)
 		// fill the telemetry array
 		telemetry.refpos = refpos - startphase;
 		telemetry.pos = position - startphase;
-		telemetry.pcur = 0;
+		telemetry.pcur = pcurrent >> 10;
 		telemetry.crc = 0;
 		
 		p = (uint8_t *)&telemetry;	
@@ -267,6 +269,7 @@ int main()
 		dcc += (0xfff&(adc_dma_buffer[0]));	
 		
 		startphase += enc_crc(MDR_SSP1->DR);
+		mfilter(0);
 	}
 
 	dca = dca >> 10;
@@ -311,7 +314,7 @@ int main()
 					
 			reg_update(&preg, (refpos - position), 0);
 			refspeed = preg.y>>12;			
-			//refspeed = 2000;
+			//refspeed = 1000;
 			
 			reg_update(&sreg, ((refspeed - speed)), 0);
 			qref = sreg.y>>12;
@@ -422,6 +425,12 @@ int main()
 		eq = qref - dq[1];
 		
 		//debug_signal(dq[1]<<2);		
+		
+		// power current
+		int32_t ang, mag;
+		//cord_atan(dq, &ang, &mag);
+		mag = abs(dq[0]) + abs(dq[1]);
+		pcurrent = mfilter(mag);		
 		
 		// currents regulators do its work
 		reg_update(&dreg, ed , fsat);

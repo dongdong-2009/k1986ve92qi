@@ -11,5 +11,6 @@ extern int32_t get_speed(int32_t enc, int32_t *pos);
 extern int32_t mfilter(int32_t x);
 extern int32_t rfilter1(int32_t x);
 extern int32_t rfilter2(int32_t x);
+extern void cord_atan(int32_t *v, int32_t *ang, int32_t *mag);
 
 #endif
