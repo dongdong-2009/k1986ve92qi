@@ -252,24 +252,13 @@ int32_t get_speed(int32_t enc, int32_t *pos)
 	return ((denc>>1)*rate)>>12;
 } 
 
-/*int32_t mfilter(int32_t x)
-{
-	static int32_t j = 0;
-	static int32_t a = 0;
-	static int32_t b[MFORDER]; // = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};	
-	
-	j = (j+1)&(MFORDER-1);
-	a = a-b[j]+x;
-	b[j] = x;
-	
-	return a;
-}*/
+#define MFORDER 1024
 
 int32_t mfilter(int32_t x, int32_t a)
 {
 	static int32_t j = 0;
 	//static int32_t a = 0;
-	static int32_t b[MFORDER];
+	static int32_t b[MFORDER]; // = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};	
 	
 	j = (j+1)&(MFORDER-1);
 	a = a-b[j]+x;

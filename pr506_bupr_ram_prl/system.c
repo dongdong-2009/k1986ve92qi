@@ -17,17 +17,23 @@ void PortConfig()
 	MDR_RST_CLK->PER_CLOCK |= 1<<21;	 	//clock of PORTA ON	
 	MDR_PORTA->FUNC = 0;
 	MDR_PORTA->RXTX = 0; 
-	// pa0 - test out
-	/*MDR_PORTA->OE |= 1<<0;
+	MDR_PORTA->OE = 0;
+	MDR_PORTA->ANALOG = 0xffff;				// цифра
+	/*// pa0 - test out
+	MDR_PORTA->OE |= 1<<0;
 	MDR_PORTA->ANALOG |= 1<<0;
-	MDR_PORTA->PWR |= (0xff << (0<<1));
-	*/
+	MDR_PORTA->PWR |= (0xff << (0<<1));*/
 	// pa3 - tmr1_ch2
 	MDR_PORTA->OE &= ~(1<<3);				// вход
 	MDR_PORTA->ANALOG |= 1<<3;				// цифра
 	MDR_PORTA->FUNC = (0x2<<(3<<1));		// альтернативная функц - tmr1_ch2
 
 	// port B
+	// pb0 - test out
+	MDR_PORTB->OE |= 0xff;
+	MDR_PORTB->ANALOG |= 0xff;
+	MDR_PORTB->PWR |= 0xffff;
+
 	// порты для ssp PB13-CLK PB14-RXD
 	MDR_RST_CLK->PER_CLOCK |= 1<<22;	 						/* clock of PORTB ON */
 	MDR_PORTB->FUNC &= ~( (0x3<<(13<<1)) + (0x3<<(14<<1)) );
@@ -36,14 +42,14 @@ void PortConfig()
 	MDR_PORTB->PWR |= (0x3<<(13<<1)) + (0x3<<(14<<1));							/* max power of port */
 	MDR_PORTB->OE |= (1<<13);
 	MDR_PORTB->OE &= ~(1<<14);
-	
+
 	// порты для uart1 PB5-TXD PB6-RXD
 	MDR_PORTB->FUNC &= ~( (0x3<<(5<<1)) + (0x3<<(6<<1)) );
 	MDR_PORTB->FUNC |= ( (0x2<<(5<<1)) + (0x02<<(6<<1)) );  			/* альтернативная функция */
 	MDR_PORTB->ANALOG |= (1<<5) + (1<<6);								/* digital */
-	//MDR_PORTB->PWR |= (0x3<<(5<<1)) + (0x3<<(6<<1));					// max power of port
+	MDR_PORTB->PWR |= (0x3<<(5<<1)) + (0x3<<(6<<1));					/* max power of port */
 	//MDR_PORTB->OE |= (1<<1);
-	
+
 	/* port C
 	 * PC0 		nRE_1
 	 * PC1 		DE_1
@@ -60,13 +66,13 @@ void PortConfig()
 					  (0x02 << (4<<1)) + (0x02 << (5<<1)) +
 					  (0x02 << (6<<1)) + (0x02 << (7<<1)) +
 					  (0x02 << (8<<1)) + (0x02 << (9<<1));
-	
+
 	MDR_PORTC->ANALOG  = 0xffff;													/* all digital */
 	MDR_PORTC->PWR = 0xffffffff;													/* max power of port */
 	MDR_PORTC->OE =  0xffff;
 	MDR_PORTC->RXTX &= ~((1<<0) + (1<<1));
 	MDR_PORTC->RXTX |= ((1<<14) + (1<<15));
-	
+
 	// port F
 	MDR_RST_CLK->PER_CLOCK |= 1<<29;	 						/* clock of PORTF ON */
 	MDR_PORTF->FUNC = 0;
@@ -74,15 +80,15 @@ void PortConfig()
 	MDR_PORTF->ANALOG |= (1<<14) + (1<<15);				/* digital mode */
 	MDR_PORTF->PWR = 0xffffffff;						/* max power */	
 	MDR_PORTF->RXTX |= ((1<<14) + (1<<15));
-	
+
 	// выход для dac1 dac2
 	MDR_RST_CLK->PER_CLOCK |= 1<<25;	 				//clock of PORTE ON	
 	MDR_PORTE->ANALOG &= ~((1<<0)+(1<<9)); // pe0 - dac2 out pe9 - dac1 out
-	
+
 	// inputs for adc
 	MDR_RST_CLK->PER_CLOCK |= 1<<24;	 				//clock of PORTD ON	
 	MDR_PORTD->ANALOG &= ~( (1<<7) + (1<<8) ); 			// PD5...PD11 входы АЦП
-	
+
 }
 
 void ClkConfig(void)
@@ -241,7 +247,6 @@ void uart_init(void)
 	//MDR_UART1->IMSC |= (UART_IMSC_RXIM | UART_IMSC_TXIM);
 	//MDR_UART1->IMSC |= ((1<<UART_IMSC_RXIM_Pos) | (1<<UART_IMSC_RTIM_Pos));	// en irq from rx and
 	MDR_UART1->IMSC |= (1<<UART_IMSC_RXIM_Pos);									// en irq from rx fifo
-	//MDR_UART1->IMSC |= (1<<UART_IMSC_TXIM_Pos);									// en irq from tx fifo
 	MDR_UART1->IMSC |= ((1<<UART_IMSC_RTIM_Pos));								// en irq from rx timeout
 	
 	//NVIC_EnableIRQ(UART1_IRQn);

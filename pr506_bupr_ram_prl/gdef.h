@@ -3,6 +3,7 @@
 
 #include "MDR32Fx.h"
 
+
 #define CPU_PLL_MULT 10 // PLL_CLK 80 MHz for 8 MHz ext oscillator
 #define EEPROM_DEL 4
 #define SYS_TICKS 80000 // 1ms for 80 MHz
@@ -28,9 +29,5 @@ struct pi_reg_state{
 #define KP_POS 6000
 
 #define MAXQCURR 1000
-
-#define MFORDER 1024
-
-#define BUPR_ID	3
 
 #endif

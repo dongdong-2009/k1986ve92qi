@@ -146,6 +146,8 @@ static inline void pwm_setc(int32_t s)
 	MDR_TIMER3->CCR3 = s+512;
 }
 
+int16_t porta_readbuffer;
+
 static inline void update_telemetry(void)
 {
 	int i;
@@ -154,15 +156,15 @@ static inline void update_telemetry(void)
 	if(MDR_TIMER1->STATUS & TIMER_STATUS_CNT_ARR_EVENT){
 		MDR_TIMER1->STATUS = 0;
 		
-		MDR_PORTA->RXTX |= 0x01; // PA0	
-		MDR_PORTB->PWR |= (0x3<<(5<<1));
+		//MDR_PORTB->RXTX |= 0x01;
 		
 		// update pll
-		//uint16_t t = MDR_TIMER1->CCR2+300;
-		//uint16_t t = MDR_TIMER1->CCR2+0;
-		uint16_t t = MDR_TIMER1->CCR2-300;
+		//uint16_t t = MDR_TIMER1->CCR2+400;		// ch3
+		//uint16_t t = MDR_TIMER1->CCR2+150;		// ch2
+		uint16_t t = MDR_TIMER1->CCR2-100;	// ch1
+				
 		if(t < 512) MDR_TIMER1->CNT += 1;
-		else if(t > 512) MDR_TIMER1->CNT -= 1;	
+		else MDR_TIMER1->CNT -= 1;	
 		
 		// fill the telemetry array
 		telemetry.refpos = refpos - startphase;
@@ -173,26 +175,29 @@ static inline void update_telemetry(void)
 		p = (uint8_t *)&telemetry;	
 		
 		// send the telemetry array
-		MDR_UART1->DR = *p++;
+		/*MDR_UART1->DR = *p++;
 		MDR_UART1->DR = *p++;	
 		MDR_UART1->DR = *p++;	
 		MDR_UART1->DR = *p++;	
 		MDR_UART1->DR = *p++;	
 		MDR_UART1->DR = *p++;	
 		MDR_UART1->DR = *p++;	
-		MDR_UART1->DR = *p++;			
-	
-		//MDR_PORTA->RXTX &= ~0x01; // PA0	
+		MDR_UART1->DR = *p++;*/			
+
+		porta_readbuffer = MDR_PORTA->RXTX; 
+		porta_readbuffer = porta_readbuffer >> 4;
+		
+		//MDR_PORTB->RXTX = porta_readbuffer;
+		//MDR_PORTB->RXTX &= ~0x01;
+		
 	}		
-	
-	if( 0 == (MDR_UART1->FR & (1<<UART_FR_BUSY_Pos)) ){
-		// tx fifo is empty
-		MDR_PORTA->RXTX &= ~0x01; // PA0	
-		MDR_PORTB->PWR &= ~(0x3<<(5<<1));
-	} 
 }
 
 int32_t update_refposition(void)
+{
+	return porta_readbuffer;
+}
+/*int32_t update_refposition(void)
 {
 	static int32_t pos = 0;
 	uint8_t buf[16];
@@ -229,7 +234,7 @@ int32_t update_refposition(void)
 	
 	return pos<<0;	
 }
-
+*/
 extern void encoder_init(int32_t s);
 
 __attribute__ ((section(".main_sec")))
@@ -301,7 +306,7 @@ int main()
 
 		code = enc_crc(MDR_SSP1->DR);
 		phase = code & (1024-1);								
-		//MDR_DAC->DAC2_DATA = code;			
+		MDR_DAC->DAC2_DATA = code;			
 		
 		encoder_code = code;
 		
@@ -323,7 +328,7 @@ int main()
 					
 			reg_update(&preg, (refpos - position), 0);
 			refspeed = preg.y>>12;			
-			refspeed = 1000;
+			//refspeed = 5000;
 			
 			reg_update(&sreg, ((refspeed - speed)), 0);
 			qref = sreg.y>>12;
@@ -424,6 +429,7 @@ int main()
 
 		// vector sync motor controller
 		phase = 1023&(phase+700);    // phase offset for correct rotor position
+		//phase = 1023&(phase+900);    // phase offset for correct rotor position
 
 		// convert abc currents to dq
 		abc[0] = ia;
@@ -442,7 +448,7 @@ int main()
 		eq = qref - dq[1];
 		
 		//debug_signal(dq[1]<<2);		
-		debug_signal(pcurrent >> 10);
+		//debug_signal(pcurrent >> 10);
 		
 		// currents regulators do its work
 		reg_update(&dreg, ed , fsat);

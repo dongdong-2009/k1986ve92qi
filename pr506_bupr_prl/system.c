@@ -1,13 +1,6 @@
 #include "gdef.h"
 
-void SysTick_Handler(void);
-extern void TIMER1_Handler(void);
-extern void TIMER3_Handler(void);
-void UART1_Handler(void);
-
 uint32_t system_time;
-void (* table_interrupt_vector[48])(void) __attribute__((aligned (4*64)));
-
 uint8_t uart_buf[16];
 uint32_t uart_rxidx = 0;
 
@@ -17,11 +10,10 @@ void PortConfig()
 	MDR_RST_CLK->PER_CLOCK |= 1<<21;	 	//clock of PORTA ON	
 	MDR_PORTA->FUNC = 0;
 	MDR_PORTA->RXTX = 0; 
-	// pa0 - test out
-	/*MDR_PORTA->OE |= 1<<0;
+	/*// pa0 - test out
+	MDR_PORTA->OE |= 1<<0;
 	MDR_PORTA->ANALOG |= 1<<0;
-	MDR_PORTA->PWR |= (0xff << (0<<1));
-	*/
+	MDR_PORTA->PWR |= (0xff << (0<<1));*/
 	// pa3 - tmr1_ch2
 	MDR_PORTA->OE &= ~(1<<3);				// вход
 	MDR_PORTA->ANALOG |= 1<<3;				// цифра
@@ -41,7 +33,7 @@ void PortConfig()
 	MDR_PORTB->FUNC &= ~( (0x3<<(5<<1)) + (0x3<<(6<<1)) );
 	MDR_PORTB->FUNC |= ( (0x2<<(5<<1)) + (0x02<<(6<<1)) );  			/* альтернативная функция */
 	MDR_PORTB->ANALOG |= (1<<5) + (1<<6);								/* digital */
-	//MDR_PORTB->PWR |= (0x3<<(5<<1)) + (0x3<<(6<<1));					// max power of port
+	MDR_PORTB->PWR |= (0x3<<(5<<1)) + (0x3<<(6<<1));					/* max power of port */
 	//MDR_PORTB->OE |= (1<<1);
 	
 	/* port C
@@ -194,27 +186,6 @@ void TimerConfig(void)
 	MDR_TIMER3->CNTRL = TIMER_CNTRL_CNT_EN; 						// start count up
 }
 
-void set_ram_vt()
-{
-	// copy vt with default values from flash to ram
-	uint32_t i = 0;
-	uint32_t *ps = 0;
-	uint32_t *pd = (uint32_t*) table_interrupt_vector;
-	
-	for(i = 0; i < 48; i++){
-		*pd++ = ps[i];
-	}
-	
-	// set vtor
-	SCB->VTOR = ((uint32_t)table_interrupt_vector);
-	table_interrupt_vector[15] = SysTick_Handler;
-	table_interrupt_vector[22] = UART1_Handler;	
-	table_interrupt_vector[30] = TIMER1_Handler;
-	table_interrupt_vector[32] = TIMER3_Handler;
-	//table_interrupt_vector[33] = ADC_Handler;
-	
-}
-
 void uart_init(void)
 {
 	uart_rxidx = 0;
@@ -241,7 +212,6 @@ void uart_init(void)
 	//MDR_UART1->IMSC |= (UART_IMSC_RXIM | UART_IMSC_TXIM);
 	//MDR_UART1->IMSC |= ((1<<UART_IMSC_RXIM_Pos) | (1<<UART_IMSC_RTIM_Pos));	// en irq from rx and
 	MDR_UART1->IMSC |= (1<<UART_IMSC_RXIM_Pos);									// en irq from rx fifo
-	//MDR_UART1->IMSC |= (1<<UART_IMSC_TXIM_Pos);									// en irq from tx fifo
 	MDR_UART1->IMSC |= ((1<<UART_IMSC_RTIM_Pos));								// en irq from rx timeout
 	
 	//NVIC_EnableIRQ(UART1_IRQn);
@@ -250,7 +220,6 @@ void uart_init(void)
 
 void system_init()
 {
-	set_ram_vt();
 	ClkConfig();
 	PortConfig();
 	TimerConfig();
@@ -269,7 +238,7 @@ void SysTick_Handler(void)
 extern uint32_t tcnt;	
 extern uint32_t tpll;
 
-void UART1_Handler(void)
+void UART1_IRQHandler(void)
 {
 	//MDR_PORTA->RXTX |= 0x01; // PA0	
 	

@@ -104,7 +104,7 @@ void dac_init()
 
 static inline void encoder_start(void)
 {
-	MDR_SSP1->DR = 0x555; // start encoder request<---->
+	MDR_SSP1->DR = 0x555; // start encoder request
 }
 
 void Timer1_IRQHandler(void)
@@ -155,13 +155,19 @@ static inline void update_telemetry(void)
 		MDR_TIMER1->STATUS = 0;
 		
 		MDR_PORTA->RXTX |= 0x01; // PA0	
+		MDR_PORTB->PWR |= (0x3<<(5<<1));
 		
 		// update pll
-		//uint16_t t = MDR_TIMER1->CCR2+300;
-		//uint16_t t = MDR_TIMER1->CCR2+0;
+#if BUPR_ID == 1
+		uint16_t t = MDR_TIMER1->CCR2+300;
+#elif BUPR_ID == 2
+		uint16_t t = MDR_TIMER1->CCR2+0;
+#elif BUPR_ID == 3		
 		uint16_t t = MDR_TIMER1->CCR2-300;
+#endif
+
 		if(t < 512) MDR_TIMER1->CNT += 1;
-		else MDR_TIMER1->CNT -= 1;	
+		else if(t > 512) MDR_TIMER1->CNT -= 1;	
 		
 		// fill the telemetry array
 		telemetry.refpos = refpos - startphase;
@@ -181,8 +187,14 @@ static inline void update_telemetry(void)
 		MDR_UART1->DR = *p++;	
 		MDR_UART1->DR = *p++;			
 	
-		MDR_PORTA->RXTX &= ~0x01; // PA0	
+		//MDR_PORTA->RXTX &= ~0x01; // PA0	
 	}		
+	
+	if( 0 == (MDR_UART1->FR & (1<<UART_FR_BUSY_Pos)) ){
+		// tx fifo is empty
+		MDR_PORTA->RXTX &= ~0x01; // PA0	
+		MDR_PORTB->PWR &= ~(0x3<<(5<<1));
+	} 
 }
 
 int32_t update_refposition(void)
@@ -205,7 +217,13 @@ int32_t update_refposition(void)
 		//int16_t ref1 = (buf[0] + (buf[1]<<8))<<4;
 		//ref1 = ref1>>4;
 		
+#if BUPR_ID == 1
 		int16_t ref1 = buf[0] + (buf[1]<<8);
+#elif BUPR_ID == 2
+		int16_t ref1 = buf[2] + (buf[3]<<8);
+#elif BUPR_ID == 3
+		int16_t ref1 = buf[4] + (buf[5]<<8);
+#endif
 		
 		//debug_signal(ref1);			
 		pos = ref1;		
@@ -246,6 +264,8 @@ int main()
 	int32_t dq[2];	
 	int32_t abc[3];		
 	
+	//while(1);
+	
 	system_init();	
 	ssi_init();
 	dac_init();
@@ -269,7 +289,7 @@ int main()
 		dcc += (0xfff&(adc_dma_buffer[0]));	
 		
 		startphase += enc_crc(MDR_SSP1->DR);
-		mfilter(0);
+		mfilter(0, 0);
 	}
 
 	dca = dca >> 10;
@@ -279,6 +299,7 @@ int main()
 	refpos = 0;
 	position = startphase;
 	encoder_init(startphase);
+	pcurrent = 0;
 	
 	while(1){
 		//MDR_PORTA->RXTX |= 0x01; // PA0	
@@ -310,7 +331,7 @@ int main()
 			speed = get_speed(code, &position);		
 			//position = position - startphase;
 			//debug_signal(speed);
-			debug_signal((startphase-position)>>0);
+			//debug_signal((startphase-position)>>0);
 					
 			reg_update(&preg, (refpos - position), 0);
 			refspeed = preg.y>>12;			
@@ -320,6 +341,8 @@ int main()
 			qref = sreg.y>>12;
 			if(qref > MAXQCURR) qref = MAXQCURR;
 			if(qref < -MAXQCURR) qref = -MAXQCURR;
+				
+			//qref = 100;
 				
 			//MDR_PORTA->RXTX &= ~0x01; // PA0
 		}
@@ -419,18 +442,19 @@ int main()
 		abc[1] = ib;
 		abc[2] = ic;
 		abc_to_dq(abc, dq, phase);
-
-		// get the errors
-		ed = 0 - dq[0];
-		eq = qref - dq[1];
-		
-		//debug_signal(dq[1]<<2);		
 		
 		// power current
 		int32_t ang, mag;
 		//cord_atan(dq, &ang, &mag);
 		mag = abs(dq[0]) + abs(dq[1]);
-		pcurrent = mfilter(mag);		
+		pcurrent = mfilter(mag, pcurrent);
+		
+		// get the errors
+		ed = 0 - dq[0];
+		eq = qref - dq[1];
+		
+		//debug_signal(dq[1]<<2);		
+		debug_signal(pcurrent >> 10);
 		
 		// currents regulators do its work
 		reg_update(&dreg, ed , fsat);

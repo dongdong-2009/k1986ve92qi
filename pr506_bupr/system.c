@@ -1,8 +1,14 @@
 #include "gdef.h"
 
 uint32_t system_time;
+
 uint8_t uart_buf[16];
 uint32_t uart_rxidx = 0;
+
+const uint32_t 	PWM_MASK = 	(0x02 << (2<<1)) + (0x02 << (3<<1)) +
+							(0x02 << (4<<1)) + (0x02 << (5<<1)) +
+							(0x02 << (6<<1)) + (0x02 << (7<<1)) +
+							(0x02 << (8<<1)) + (0x02 << (9<<1));
 
 //--- Ports configuration ---
 void PortConfig()
@@ -11,9 +17,11 @@ void PortConfig()
 	MDR_PORTA->FUNC = 0;
 	MDR_PORTA->RXTX = 0; 
 	// pa0 - test out
-	MDR_PORTA->OE |= 1<<0;
+	/*MDR_PORTA->OE |= 1<<0;
 	MDR_PORTA->ANALOG |= 1<<0;
 	MDR_PORTA->PWR |= (0xff << (0<<1));
+	*/
+	
 	// pa3 - tmr1_ch2
 	MDR_PORTA->OE &= ~(1<<3);				// вход
 	MDR_PORTA->ANALOG |= 1<<3;				// цифра
@@ -33,7 +41,7 @@ void PortConfig()
 	MDR_PORTB->FUNC &= ~( (0x3<<(5<<1)) + (0x3<<(6<<1)) );
 	MDR_PORTB->FUNC |= ( (0x2<<(5<<1)) + (0x02<<(6<<1)) );  			/* альтернативная функция */
 	MDR_PORTB->ANALOG |= (1<<5) + (1<<6);								/* digital */
-	MDR_PORTB->PWR |= (0x3<<(5<<1)) + (0x3<<(6<<1));					/* max power of port */
+	//MDR_PORTB->PWR |= (0x3<<(5<<1)) + (0x3<<(6<<1));					// max power of port
 	//MDR_PORTB->OE |= (1<<1);
 	
 	/* port C
@@ -53,18 +61,18 @@ void PortConfig()
 					  (0x02 << (6<<1)) + (0x02 << (7<<1)) +
 					  (0x02 << (8<<1)) + (0x02 << (9<<1));
 	
-	MDR_PORTC->ANALOG  = 0xffff;													/* all digital */
-	MDR_PORTC->PWR = 0xffffffff;													/* max power of port */
+	MDR_PORTC->ANALOG  = 0xffff;													
+	MDR_PORTC->PWR = 0xffffffff;													
 	MDR_PORTC->OE =  0xffff;
 	MDR_PORTC->RXTX &= ~((1<<0) + (1<<1));
-	MDR_PORTC->RXTX |= ((1<<14) + (1<<15));
+	MDR_PORTC->RXTX |= ((1<<14) + (1<<15));	
 	
 	// port F
 	MDR_RST_CLK->PER_CLOCK |= 1<<29;	 						/* clock of PORTF ON */
 	MDR_PORTF->FUNC = 0;
 	MDR_PORTF->OE |= (1<<14) + (1<<15);					/* output mode */
 	MDR_PORTF->ANALOG |= (1<<14) + (1<<15);				/* digital mode */
-	MDR_PORTF->PWR = 0xffffffff;						/* max power */	
+	MDR_PORTF->PWR |= (3<<(14<<1)) + (3<<(15<<1));						/* max power */	
 	MDR_PORTF->RXTX |= ((1<<14) + (1<<15));
 	
 	// выход для dac1 dac2
@@ -212,6 +220,7 @@ void uart_init(void)
 	//MDR_UART1->IMSC |= (UART_IMSC_RXIM | UART_IMSC_TXIM);
 	//MDR_UART1->IMSC |= ((1<<UART_IMSC_RXIM_Pos) | (1<<UART_IMSC_RTIM_Pos));	// en irq from rx and
 	MDR_UART1->IMSC |= (1<<UART_IMSC_RXIM_Pos);									// en irq from rx fifo
+	//MDR_UART1->IMSC |= (1<<UART_IMSC_TXIM_Pos);									// en irq from tx fifo
 	MDR_UART1->IMSC |= ((1<<UART_IMSC_RTIM_Pos));								// en irq from rx timeout
 	
 	//NVIC_EnableIRQ(UART1_IRQn);
