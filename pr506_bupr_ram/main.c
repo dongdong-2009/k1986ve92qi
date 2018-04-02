@@ -37,6 +37,8 @@ uint32_t encoder_code;
 
 int32_t pcurrent = 0;
 
+static int32_t uartposition = 0;
+
 static inline void debug_signal(int32_t s)
 {
 	MDR_DAC->DAC2_DATA = s+2048;
@@ -64,7 +66,8 @@ void ssi_init()
 	MDR_RST_CLK->SSP_CLOCK = (1<<RST_CLK_SSP_CLOCK_SSP1_CLK_EN_Pos) | (10 << RST_CLK_SSP_CLOCK_SSP1_BRG_Pos); // SSP1_CLK = HCLK
 	
 	MDR_SSP1->CR1 = 0;	
-	MDR_SSP1->CPSR = 10; // предделитель
+	MDR_SSP1->CPSR = 6; // предделитель
+	//MDR_SSP1->CPSR = 10; // предделитель
 	//MDR_SSP1->CR0 = (0x02 << SSP_CR0_SCR_Pos) + (0x00 << SSP_CR0_FRF_Pos) | (11 << SSP_CR0_DSS_Pos) | SSP_CR0_SPO;
 	MDR_SSP1->CR0 = (0x02 << SSP_CR0_SCR_Pos) + (0x01 << SSP_CR0_FRF_Pos) + ((16-1) << SSP_CR0_DSS_Pos);
 	MDR_SSP1->CR1 = SSP_CR1_SSE; // enable ssp
@@ -92,6 +95,7 @@ uint32_t enc_crc(uint32_t e)
 	
 	for(crc=0; b; (b = b>>1)) crc = crc ^ b;		
 	(1&crc) || (code = (MAXENC-1) & e);
+	//code = (MAXENC-1) & e;
 
 	return code;
 }
@@ -99,12 +103,18 @@ uint32_t enc_crc(uint32_t e)
 void dac_init()
 {
 	MDR_RST_CLK->PER_CLOCK |= (1<<18);
-	MDR_DAC->CFG |= (1<<3); // dac2 on
+	MDR_DAC->CFG |= (1<<2)+(1<<3); // dac1,2 on
 }	
 
 static inline void encoder_start(void)
 {
 	MDR_SSP1->DR = 0x555; // start encoder request<---->
+}
+
+void ADC_Handler(void)
+{
+	register int buf = MDR_ADC->ADC1_RESULT;	
+	//MDR_PORTA->RXTX ^= 0x01; // PA0	
 }
 
 void TIMER1_Handler(void)
@@ -158,15 +168,18 @@ static inline void update_telemetry(void)
 		MDR_PORTB->PWR |= (0x3<<(5<<1));
 		
 		// update pll
-		//uint16_t t = MDR_TIMER1->CCR2+300;
+		uint16_t t = MDR_TIMER1->CCR2+300;
 		//uint16_t t = MDR_TIMER1->CCR2+0;
-		uint16_t t = MDR_TIMER1->CCR2-300;
+		//uint16_t t = MDR_TIMER1->CCR2-300;
 		if(t < 512) MDR_TIMER1->CNT += 1;
 		else if(t > 512) MDR_TIMER1->CNT -= 1;	
 		
 		// fill the telemetry array
-		telemetry.refpos = refpos - startphase;
-		telemetry.pos = position - startphase;
+		//telemetry.refpos = refpos - startphase;
+		//telemetry.pos = position - startphase;
+		
+		telemetry.refpos = linpos;
+		telemetry.pos = (linpos<<10)/reflinpos;
 		telemetry.pcur = pcurrent >> 10;
 		telemetry.crc = 0;
 		
@@ -194,7 +207,8 @@ static inline void update_telemetry(void)
 
 int32_t update_refposition(void)
 {
-	static int32_t pos = 0;
+	//static int32_t pos = 0;
+	int32_t pos = uartposition;
 	uint8_t buf[16];
 	
 	//if(MDR_UART1->MIS & (1<<UART_MIS_RTMIS_Pos))
@@ -215,7 +229,7 @@ int32_t update_refposition(void)
 		int16_t ref1 = buf[0] + (buf[1]<<8);
 		
 		//debug_signal(ref1);			
-		pos = ref1;		
+		uartposition = pos = ref1;
 
 	}	
 
@@ -258,6 +272,14 @@ int main()
 	ssi_init();
 	dac_init();
 	adc_dma_init();	
+
+	/*while(1){
+	
+		adc_dma_wait();				
+		MDR_DAC->DAC1_DATA = (0xfff&(adc_dma_buffer[0]));
+		MDR_DAC->DAC2_DATA = (0xfff&(adc_dma_buffer[1]));		
+		//MDR_PORTA->RXTX ^= 0x01; // PA0					
+	}*/
 	
 	// init the regulators
 	reg_init(&dreg, KI_DQCUR, KP_DQCUR);
@@ -265,71 +287,94 @@ int main()
 	reg_init(&sreg, KI_SPD, KP_SPD);	
 	reg_init(&preg, KI_POS, KP_POS);		
 
-	// do some init actions	
+	// do some init actions
+	
+	for(i=0; i<1024; i++)
+	{
+		mfilter(0, 0);
+		//lpos_filter(0, 0);
+		//lref_filter(0, 0);		
+	}	
+
 	dca = 0;
 	dcc = 0;
 	startphase = 0;
+	linpos = 0;
+	reflinpos = 0;
 	for(i=0; i<1024; i++)
 	{
 		adc_dma_wait();			
 		
-		dca += (0xfff&(adc_dma_buffer[1]));
-		dcc += (0xfff&(adc_dma_buffer[0]));	
+		dca += (0xfff&(adc_dma_buffer[2]));
+		dcc += (0xfff&(adc_dma_buffer[3]));	
 		
-		startphase += enc_crc(MDR_SSP1->DR);
-		mfilter(0, 0);
+		startphase += enc_crc(MDR_SSP1->DR);		
+		
+		reflinpos += (0xfff&(adc_dma_buffer[0]));
+		linpos += (0xfff&(adc_dma_buffer[1]));		
+		
 	}
 
 	dca = dca >> 10;
 	dcc = dcc >> 10;
 	startphase = startphase >> 10;
+	
+	startlinpos = (linpos)/(reflinpos>>10);
 
+	while(1);
+
+	uartposition = 0;
 	refpos = 0;
 	position = startphase;
 	encoder_init(startphase);
 	pcurrent = 0;
-	
+
 	while(1){
 		//MDR_PORTA->RXTX |= 0x01; // PA0	
 		adc_dma_wait();
 		//MDR_PORTA->RXTX &= ~0x01; // PA0	
 
 		// get the currents from ADC	
-		ia = (0xfff&(adc_dma_buffer[1])) - dca;
-		ic = (0xfff&(adc_dma_buffer[0])) - dcc;
+		ia = (0xfff&(adc_dma_buffer[2])) - dca;
+		ic = (0xfff&(adc_dma_buffer[3])) - dcc;
 		ib = ia+ic;		
 
 		code = enc_crc(MDR_SSP1->DR);
 		phase = code & (1024-1);								
 		//MDR_DAC->DAC2_DATA = code;			
-		
+
+		reflinpos = (0xfff&(adc_dma_buffer[0]));
+		linpos = (0xfff&(adc_dma_buffer[1]));
+		//MDR_DAC->DAC1_DATA = (reflinpos<<10)/linpos; //reflinpos;
+		//MDR_DAC->DAC2_DATA = linpos;
+
 		encoder_code = code;
-		
+
 		//refpos = update_position() - startphase;
 
 		tcnt++;
-		
+
 		if( (0x0007 & tcnt) == 0){
-				
+
 			// 3kHz
 			//MDR_PORTA->RXTX |= 0x01; // PA0	
-			
+
 			refpos = update_refposition() + startphase;
-			
+
 			speed = get_speed(code, &position);		
 			//position = position - startphase;
 			//debug_signal(speed);
 			//debug_signal((startphase-position)>>0);
-					
+
 			reg_update(&preg, (refpos - position), 0);
 			refspeed = preg.y>>12;			
-			refspeed = 1000;
-			
+			//refspeed = 3000;
+
 			reg_update(&sreg, ((refspeed - speed)), 0);
 			qref = sreg.y>>12;
 			if(qref > MAXQCURR) qref = MAXQCURR;
 			if(qref < -MAXQCURR) qref = -MAXQCURR;
-				
+
 			//qref = 100;
 				
 			//MDR_PORTA->RXTX &= ~0x01; // PA0
@@ -423,7 +468,7 @@ int main()
 */
 
 		// vector sync motor controller
-		phase = 1023&(phase+700);    // phase offset for correct rotor position
+		phase = 1023&(phase+900);    // phase offset for correct rotor position
 
 		// convert abc currents to dq
 		abc[0] = ia;
@@ -442,7 +487,7 @@ int main()
 		eq = qref - dq[1];
 		
 		//debug_signal(dq[1]<<2);		
-		debug_signal(pcurrent >> 10);
+		//debug_signal(pcurrent >> 10);
 		
 		// currents regulators do its work
 		reg_update(&dreg, ed , fsat);

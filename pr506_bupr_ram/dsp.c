@@ -251,9 +251,33 @@ int32_t get_speed(int32_t enc, int32_t *pos)
 	
 	return ((denc>>1)*rate)>>12;
 } 
-
+/*
+int32_t lpos_filter(int32_t x, int32_t a)
+{
+	static int32_t j = 0;
+	//static int32_t a = 0;
+	static int32_t b[128];
+	
+	j = (j+1)&(128-1);
+	a = a-b[j]+x;
+	b[j] = x;
+	
+	return a;
+}
+int32_t lref_filter(int32_t x, int32_t a)
+{
+	static int32_t j = 0;
+	//static int32_t a = 0;
+	static int32_t b[128];
+	
+	j = (j+1)&(128-1);
+	a = a-b[j]+x;
+	b[j] = x;
+	
+	return a;
+}
+*/
 #define MFORDER 1024
-
 int32_t mfilter(int32_t x, int32_t a)
 {
 	static int32_t j = 0;

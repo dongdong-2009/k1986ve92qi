@@ -31,6 +31,6 @@ struct pi_reg_state{
 
 #define MFORDER 1024
 
-#define BUPR_ID	3
+#define BUPR_ID	1
 
 #endif

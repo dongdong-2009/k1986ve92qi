@@ -3,6 +3,7 @@
 void SysTick_Handler(void);
 extern void TIMER1_Handler(void);
 extern void TIMER3_Handler(void);
+extern void ADC_Handler(void);
 void UART1_Handler(void);
 
 uint32_t system_time;
@@ -18,10 +19,10 @@ void PortConfig()
 	MDR_PORTA->FUNC = 0;
 	MDR_PORTA->RXTX = 0; 
 	// pa0 - test out
-	/*MDR_PORTA->OE |= 1<<0;
+	MDR_PORTA->OE |= 1<<0;
 	MDR_PORTA->ANALOG |= 1<<0;
 	MDR_PORTA->PWR |= (0xff << (0<<1));
-	*/
+	
 	// pa3 - tmr1_ch2
 	MDR_PORTA->OE &= ~(1<<3);				// вход
 	MDR_PORTA->ANALOG |= 1<<3;				// цифра
@@ -81,7 +82,7 @@ void PortConfig()
 	
 	// inputs for adc
 	MDR_RST_CLK->PER_CLOCK |= 1<<24;	 				//clock of PORTD ON	
-	MDR_PORTD->ANALOG &= ~( (1<<7) + (1<<8) ); 			// PD5...PD11 входы АЦП
+	MDR_PORTD->ANALOG &= ~( (1<<5) + (1<<6) + (1<<7) + (1<<8) + (1<<9) ); 			// PD5...PD11 входы АЦП
 	
 }
 
@@ -125,7 +126,6 @@ void TimerConfig(void)
 	MDR_TIMER1->IE |= TIMER_IE_CNT_ARR_EVENT_IE;					// прерывание по событию  ARR=CNT
 	MDR_TIMER1->CNTRL = TIMER_CNTRL_CNT_EN; 						// start count up	
 	//NVIC_EnableIRQ(Timer1_IRQn); 									// enable in nvic int from tim1
-
 	
 	// enable TIM3
 	MDR_RST_CLK->PER_CLOCK |= (1 << 16);
@@ -133,11 +133,13 @@ void TimerConfig(void)
 	MDR_RST_CLK->TIM_CLOCK |= (1 << 26);
 	
 	MDR_TIMER3->CNT = 0;
-	MDR_TIMER3->PSG = 3 - 1;   		/* prescaller */
+	//MDR_TIMER3->PSG = 3 - 1;   		/* prescaller */
+	MDR_TIMER3->PSG = 4 - 1;   		/* prescaller */
 	MDR_TIMER3->ARR = 1024 - 1;		/* TIM4 period is 26.042KHz */
 	MDR_TIMER3->CCR1 = 512;
 	MDR_TIMER3->CCR2 = 512;
 	MDR_TIMER3->CCR3 = 512;
+	MDR_TIMER3->CCR4 = 200;
 
 	// channel 1
 	MDR_TIMER3->CH1_CNTRL &= ~TIMER_CH_CNTRL_OCCM_Msk;				
@@ -181,12 +183,27 @@ void TimerConfig(void)
 	MDR_TIMER3->CH3_CNTRL1 |= (1 << TIMER_CH_CNTRL1_NSELOE_Pos);	    						// инверсный выход канала 1 всегда работает на выход на OE всегда 1		
 	MDR_TIMER3->CH3_CNTRL2 |= (1<<3); // CRRRLD on
 
+
+	// channel 4
+	MDR_TIMER3->CH4_CNTRL &= ~TIMER_CH_CNTRL_OCCM_Msk;					
+	MDR_TIMER3->CH4_CNTRL |= (7 << TIMER_CH_CNTRL_OCCM_Pos);									// 111: 0, если DIR= 0 (счет вверх), CNT<CCR, иначе 1
+	
+	MDR_TIMER3->CH4_CNTRL1 &= ~(TIMER_CH_CNTRL1_SELO_Msk | TIMER_CH_CNTRL1_SELOE_Msk);		// настройка прямого выхода канала 1
+	MDR_TIMER3->CH4_CNTRL1 |= (3 << TIMER_CH_CNTRL1_SELO_Pos);	    							// на прямой выход канала 1 идет сигнал с DTG
+	MDR_TIMER3->CH4_CNTRL1 |= (1 << TIMER_CH_CNTRL1_SELOE_Pos);	    						// прямой выход канала 1 всегда работает на выход на OE всегда 1
+	
+	MDR_TIMER3->CH4_CNTRL1 &= ~(TIMER_CH_CNTRL1_NSELO_Msk | TIMER_CH_CNTRL1_NSELOE_Msk);		// настройка инверсного выхода канала 1
+	MDR_TIMER3->CH4_CNTRL1 |= (3 << TIMER_CH_CNTRL1_NSELO_Pos);	    						// на инверсный выход канала 1 идет сигнал с DTG
+	MDR_TIMER3->CH4_CNTRL1 |= (1 << TIMER_CH_CNTRL1_NSELOE_Pos);	    						// инверсный выход канала 1 всегда работает на выход на OE всегда 1		
+	MDR_TIMER3->CH4_CNTRL2 |= (1<<3); // CRRRLD on
+	
 	// setting for dead time generator (DTG)
 	//MDR_TIMER3->CH1_DTG |= (1 << 4);
 	//MDR_TIMER3->CH1_DTG |= 15;
 	MDR_TIMER3->CH1_DTG |= ((0xff&(150)) << 5); 					// delay DTG	
 	MDR_TIMER3->CH2_DTG |= ((0xff&(150)) << 5); 					// delay DTG	
 	MDR_TIMER3->CH3_DTG |= ((0xff&(150)) << 5); 					// delay DTG	
+	MDR_TIMER3->CH4_DTG |= ((0xff&(150)) << 5); 					// delay DTG	
 
 	MDR_TIMER3->IE |= TIMER_IE_CNT_ARR_EVENT_IE;					// прерывание по событию  ARR=CNT
 	NVIC_EnableIRQ(Timer3_IRQn); 									// enable in nvic int from tim3	
@@ -211,7 +228,7 @@ void set_ram_vt()
 	table_interrupt_vector[22] = UART1_Handler;	
 	table_interrupt_vector[30] = TIMER1_Handler;
 	table_interrupt_vector[32] = TIMER3_Handler;
-	//table_interrupt_vector[33] = ADC_Handler;
+	table_interrupt_vector[33] = ADC_Handler;
 	
 }
 

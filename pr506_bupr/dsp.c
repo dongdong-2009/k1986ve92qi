@@ -237,17 +237,23 @@ void encoder_init(int32_t s)
 int32_t get_speed(int32_t enc, int32_t *pos)
 {
 	int32_t denc;
+	int32_t dencpos;
 	int32_t rate = 60*(120000000/5/1024/8);
 	
 	denc = (enc-enc2);
+	dencpos = (enc-enc1);
 	enc2 = enc1;
 	enc1 = enc;
 	if(abs(denc) > 1000){
 		if(denc < 0) denc += 4096;
 		else denc -= 4096;
 	}		
-	
-	*pos += denc;
+	if(abs(dencpos) > 1000){
+		if(dencpos < 0) dencpos += 4096;
+		else dencpos -= 4096;
+	}
+
+	*pos += dencpos;
 	
 	return ((denc>>1)*rate)>>12;
 } 
