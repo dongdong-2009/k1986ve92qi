@@ -9,123 +9,125 @@ SRAM             0x20000000         0x00008000         xrw
 Linker script and memory map
 
 
-.text           0x20000000     0x14d4
+.text           0x20000000     0x1960
  *(.main_sec)
- .main_sec      0x20000000      0x160 main.o
+ .main_sec      0x20000000      0x418 main.o
                 0x20000000                main
  *(.text)
- .text          0x20000160      0x270 main.o
-                0x20000160                sleep
-                0x20000190                ssi_init
-                0x200001d4                b2g
-                0x200001f0                g2b
-                0x20000224                enc_crc
-                0x20000278                dac_init
-                0x200002bc                ADC_Handler
-                0x200002d0                TIMER1_Handler
-                0x200002e8                TIMER3_Handler
-                0x20000304                get_phase
-                0x20000338                update_refposition
- .text          0x200003d0      0x8d4 dsp.o
-                0x200003d0                mycos
-                0x200003e0                mysin
-                0x200003f4                reg_init
-                0x20000400                reg_update
-                0x2000042c                dot3
-                0x2000044c                abc_to_dq
-                0x200004c8                dq_to_abc
-                0x20000544                cord_atan
-                0x200006ac                sinpwm
-                0x2000087c                svpwm
-                0x20000b70                encoder_init
-                0x20000b7c                get_speed
-                0x20000bc0                mfilter
-                0x20000be4                rfilter1
-                0x20000c44                rfilter2
- .text          0x20000ca4        0x0 cos_tb.o
- .text          0x20000ca4      0x144 adc_dma.o
-                0x20000ca4                adc_init
-                0x20000cf4                dma_init
-                0x20000d70                adc_dma_init
-                0x20000d80                adc_dma_start
-                0x20000dac                adc_dma_wait
- .text          0x20000de8      0x6ec system.o
-                0x20000e18                PortConfig
-                0x20000fcc                ClkConfig
-                0x20001038                TimerConfig
-                0x200012f8                set_ram_vt
-                0x2000137c                uart_init
-                0x20001418                system_init
-                0x20001434                SysTick_Handler
-                0x20001450                UART1_Handler
+ .text          0x20000418      0x444 main.o
+                0x20000418                sleep
+                0x20000448                ssi_init
+                0x2000048c                b2g
+                0x200004a8                g2b
+                0x200004dc                enc_crc
+                0x20000530                dac_init
+                0x20000574                ADC_Handler
+                0x20000588                TIMER1_Handler
+                0x200005a0                TIMER3_Handler
+                0x200005bc                get_phase
+                0x2000078c                update_refposition
+ .text          0x2000085c      0x8d4 dsp.o
+                0x2000085c                mycos
+                0x2000086c                mysin
+                0x20000880                reg_init
+                0x2000088c                reg_update
+                0x200008b8                dot3
+                0x200008d8                abc_to_dq
+                0x20000954                dq_to_abc
+                0x200009d0                cord_atan
+                0x20000b38                sinpwm
+                0x20000d08                svpwm
+                0x20000ffc                encoder_init
+                0x20001008                get_speed
+                0x2000104c                mfilter
+                0x20001070                rfilter1
+                0x200010d0                rfilter2
+ .text          0x20001130        0x0 cos_tb.o
+ .text          0x20001130      0x144 adc_dma.o
+                0x20001130                adc_init
+                0x20001180                dma_init
+                0x200011fc                adc_dma_init
+                0x2000120c                adc_dma_start
+                0x20001238                adc_dma_wait
+ .text          0x20001274      0x6ec system.o
+                0x200012a4                PortConfig
+                0x20001458                ClkConfig
+                0x200014c4                TimerConfig
+                0x20001784                set_ram_vt
+                0x20001808                uart_init
+                0x200018a4                system_init
+                0x200018c0                SysTick_Handler
+                0x200018dc                UART1_Handler
 
-.rodata         0x200014d4     0x1040
- .rodata        0x200014d4       0x40 dsp.o
- .rodata        0x20001514     0x1000 cos_tb.o
-                0x20001514                cos_tb
+.rodata         0x20001960     0x1040
+ .rodata        0x20001960       0x40 dsp.o
+ .rodata        0x200019a0     0x1000 cos_tb.o
+                0x200019a0                cos_tb
 
-.glue_7         0x20002514        0x0
- .glue_7        0x20002514        0x0 linker stubs
+.glue_7         0x200029a0        0x0
+ .glue_7        0x200029a0        0x0 linker stubs
 
-.glue_7t        0x20002514        0x0
- .glue_7t       0x20002514        0x0 linker stubs
+.glue_7t        0x200029a0        0x0
+ .glue_7t       0x200029a0        0x0 linker stubs
 
-.vfp11_veneer   0x20002514        0x0
- .vfp11_veneer  0x20002514        0x0 linker stubs
+.vfp11_veneer   0x200029a0        0x0
+ .vfp11_veneer  0x200029a0        0x0 linker stubs
 
-.v4_bx          0x20002514        0x0
- .v4_bx         0x20002514        0x0 linker stubs
+.v4_bx          0x200029a0        0x0
+ .v4_bx         0x200029a0        0x0 linker stubs
 
-.iplt           0x20002514        0x0
- .iplt          0x20002514        0x0 main.o
+.iplt           0x200029a0        0x0
+ .iplt          0x200029a0        0x0 main.o
 
-.rel.dyn        0x20002514        0x0
- .rel.iplt      0x20002514        0x0 main.o
+.rel.dyn        0x200029a0        0x0
+ .rel.iplt      0x200029a0        0x0 main.o
 
-.data           0x20002514        0x0
+.data           0x200029a0        0x0
  *(.data)
- .data          0x20002514        0x0 main.o
- .data          0x20002514        0x0 dsp.o
- .data          0x20002514        0x0 cos_tb.o
- .data          0x20002514        0x0 adc_dma.o
- .data          0x20002514        0x0 system.o
+ .data          0x200029a0        0x0 main.o
+ .data          0x200029a0        0x0 dsp.o
+ .data          0x200029a0        0x0 cos_tb.o
+ .data          0x200029a0        0x0 adc_dma.o
+ .data          0x200029a0        0x0 system.o
 
-.igot.plt       0x20002514        0x0
- .igot.plt      0x20002514        0x0 main.o
+.igot.plt       0x200029a0        0x0
+ .igot.plt      0x200029a0        0x0 main.o
 
-.bss            0x20002600     0x12d4
+.bss            0x20002a00     0x12d4
  *(.bss)
- .bss           0x20002600       0x40 main.o
-                0x20002600                refpos
-                0x20002604                reflinpos
-                0x20002608                startlinpos
-                0x2000260c                startphase
-                0x20002610                linpos
-                0x20002614                tcnt
-                0x20002618                tpll
-                0x2000261c                fpll
-                0x20002620                ttlm
-                0x20002624                position
-                0x20002628                encoder_code
-                0x2000262c                pcurrent
-                0x20002634                telemetry
- .bss           0x20002640     0x102c dsp.o
- .bss           0x2000366c        0x0 cos_tb.o
- .bss           0x2000366c        0x0 adc_dma.o
- *fill*         0x2000366c       0x94 
- .bss           0x20003700      0x1d4 system.o
-                0x20003700                system_time
-                0x20003800                table_interrupt_vector
-                0x200038c0                uart_buf
-                0x200038d0                uart_rxidx
+ .bss           0x20002a00       0x48 main.o
+                0x20002a00                refpos
+                0x20002a04                reflinpos
+                0x20002a08                startlinpos
+                0x20002a0c                zerolinpos
+                0x20002a10                startphase
+                0x20002a14                linpos
+                0x20002a18                tcnt
+                0x20002a1c                tpll
+                0x20002a20                fpll
+                0x20002a24                ttlm
+                0x20002a28                position
+                0x20002a2c                zerophase
+                0x20002a30                encoder_code
+                0x20002a34                pcurrent
+                0x20002a3c                telemetry
+ .bss           0x20002a48     0x102c dsp.o
+ .bss           0x20003a74        0x0 cos_tb.o
+ .bss           0x20003a74        0x0 adc_dma.o
+ *fill*         0x20003a74       0x8c 
+ .bss           0x20003b00      0x1d4 system.o
+                0x20003b00                system_time
+                0x20003c00                table_interrupt_vector
+                0x20003cc0                uart_buf
+                0x20003cd0                uart_rxidx
 
-.dma_sec        0x200038d4      0x54c
-                0x20003c00                . = ALIGN (0x400)
- *fill*         0x200038d4      0x32c 
+.dma_sec        0x20003cd4      0x54c
+                0x20004000                . = ALIGN (0x400)
+ *fill*         0x20003cd4      0x32c 
  *(.dma_sec)
- .dma_sec       0x20003c00      0x220 adc_dma.o
-                0x20003c00                dma_ctr_str
-                0x20003e00                adc_dma_buffer
+ .dma_sec       0x20004000      0x220 adc_dma.o
+                0x20004000                dma_ctr_str
+                0x20004200                adc_dma_buffer
 LOAD main.o
 LOAD dsp.o
 LOAD cos_tb.o
@@ -133,19 +135,19 @@ LOAD adc_dma.o
 LOAD system.o
 OUTPUT(blink.elf elf32-littlearm)
 
-.debug_info     0x00000000     0x2224
- .debug_info    0x00000000      0xa77 main.o
- .debug_info    0x00000a77      0x987 dsp.o
- .debug_info    0x000013fe       0x97 cos_tb.o
- .debug_info    0x00001495      0x3cb adc_dma.o
- .debug_info    0x00001860      0x9c4 system.o
+.debug_info     0x00000000     0x2403
+ .debug_info    0x00000000      0xc56 main.o
+ .debug_info    0x00000c56      0x987 dsp.o
+ .debug_info    0x000015dd       0x97 cos_tb.o
+ .debug_info    0x00001674      0x3cb adc_dma.o
+ .debug_info    0x00001a3f      0x9c4 system.o
 
-.debug_abbrev   0x00000000      0x868
- .debug_abbrev  0x00000000      0x25d main.o
- .debug_abbrev  0x0000025d      0x246 dsp.o
- .debug_abbrev  0x000004a3       0x75 cos_tb.o
- .debug_abbrev  0x00000518      0x10e adc_dma.o
- .debug_abbrev  0x00000626      0x242 system.o
+.debug_abbrev   0x00000000      0x898
+ .debug_abbrev  0x00000000      0x28d main.o
+ .debug_abbrev  0x0000028d      0x246 dsp.o
+ .debug_abbrev  0x000004d3       0x75 cos_tb.o
+ .debug_abbrev  0x00000548      0x10e adc_dma.o
+ .debug_abbrev  0x00000656      0x242 system.o
 
 .debug_aranges  0x00000000       0xa0
  .debug_aranges
@@ -163,23 +165,23 @@ OUTPUT(blink.elf elf32-littlearm)
  .debug_ranges  0x00000000       0x18 main.o
  .debug_ranges  0x00000018      0x120 dsp.o
 
-.debug_line     0x00000000      0x7f5
- .debug_line    0x00000000      0x1a2 main.o
- .debug_line    0x000001a2      0x385 dsp.o
- .debug_line    0x00000527       0x66 cos_tb.o
- .debug_line    0x0000058d       0xdf adc_dma.o
- .debug_line    0x0000066c      0x189 system.o
+.debug_line     0x00000000      0x88b
+ .debug_line    0x00000000      0x238 main.o
+ .debug_line    0x00000238      0x385 dsp.o
+ .debug_line    0x000005bd       0x66 cos_tb.o
+ .debug_line    0x00000623       0xdf adc_dma.o
+ .debug_line    0x00000702      0x189 system.o
 
-.debug_str      0x00000000      0xabd
- .debug_str     0x00000000      0x503 main.o
-                                0x55f (size before relaxing)
- .debug_str     0x00000503      0x12e dsp.o
+.debug_str      0x00000000      0xb09
+ .debug_str     0x00000000      0x57b main.o
+                                0x5e1 (size before relaxing)
+ .debug_str     0x0000057b      0x12e dsp.o
                                 0x1da (size before relaxing)
- .debug_str     0x00000631        0x9 cos_tb.o
+ .debug_str     0x000006a9        0x9 cos_tb.o
                                 0x114 (size before relaxing)
- .debug_str     0x0000063a      0x185 adc_dma.o
+ .debug_str     0x000006b2      0x185 adc_dma.o
                                 0x3fc (size before relaxing)
- .debug_str     0x000007bf      0x2fe system.o
+ .debug_str     0x00000837      0x2d2 system.o
                                 0x612 (size before relaxing)
 
 .comment        0x00000000       0x6e
@@ -203,11 +205,11 @@ OUTPUT(blink.elf elf32-littlearm)
  .ARM.attributes
                 0x000000cc       0x33 system.o
 
-.debug_frame    0x00000000      0x594
- .debug_frame   0x00000000      0x1d0 main.o
- .debug_frame   0x000001d0      0x1d8 dsp.o
- .debug_frame   0x000003a8       0xac adc_dma.o
- .debug_frame   0x00000454      0x140 system.o
+.debug_frame    0x00000000      0x634
+ .debug_frame   0x00000000      0x270 main.o
+ .debug_frame   0x00000270      0x1d8 dsp.o
+ .debug_frame   0x00000448       0xac adc_dma.o
+ .debug_frame   0x000004f4      0x140 system.o
 
 .debug_loc      0x00000000     0x1b6f
  .debug_loc     0x00000000     0x1b6f dsp.o

@@ -23,8 +23,13 @@ struct pi_reg_state{
 
 #define KI_DQCUR 80
 #define KP_DQCUR 200
+
 #define KI_SPD 0
 #define KP_SPD 5000
+
+#define KI_LIN 0
+#define KP_LIN 500000
+
 #define KI_POS 0
 #define KP_POS 3000
 

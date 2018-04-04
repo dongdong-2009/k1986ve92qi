@@ -24,6 +24,8 @@ extern uint32_t uart_rxidx;
 int32_t refpos = 0;
 int32_t reflinpos = 0;
 int32_t startlinpos = 0;
+int32_t zerolinpos = 0;
+
 int32_t startphase = 0;
 int32_t linpos = 0;
 
@@ -33,6 +35,7 @@ uint32_t fpll = 0;
 uint32_t ttlm = 0;
 
 int32_t position = 0;
+int32_t zerophase = 0;
 uint32_t encoder_code;
 
 int32_t pcurrent = 0;
@@ -175,11 +178,12 @@ static inline void update_telemetry(void)
 		else if(t > 512) MDR_TIMER1->CNT -= 1;	
 		
 		// fill the telemetry array
-		//telemetry.refpos = refpos - startphase;
-		//telemetry.pos = position - startphase;
+		telemetry.refpos = uartposition; //refpos-zerophase;
+		//telemetry.pos = position-zerophase;
 		
-		telemetry.refpos = linpos;
-		telemetry.pos = (linpos<<10)/reflinpos;
+		//telemetry.refpos = reflinpos - zerolinpos;
+		telemetry.pos = linpos;
+		
 		telemetry.pcur = pcurrent >> 10;
 		telemetry.crc = 0;
 		
@@ -205,10 +209,11 @@ static inline void update_telemetry(void)
 	} 
 }
 
-int32_t update_refposition(void)
+//int32_t update_refposition(void)
+void update_refposition(void)
 {
 	//static int32_t pos = 0;
-	int32_t pos = uartposition;
+	//int32_t pos = uartposition;
 	uint8_t buf[16];
 	
 	//if(MDR_UART1->MIS & (1<<UART_MIS_RTMIS_Pos))
@@ -227,9 +232,13 @@ int32_t update_refposition(void)
 		//ref1 = ref1>>4;
 		
 		int16_t ref1 = buf[0] + (buf[1]<<8);
+		(ref1 > 2047) && (ref1 = 2047);
+		(ref1 < -2048) && (ref1 = -2048);
 		
 		//debug_signal(ref1);			
-		uartposition = pos = ref1;
+		uartposition = ref1;
+		refpos = 57*ref1 + zerophase;
+		//reflinpos = ref1+zerolinpos;
 
 	}	
 
@@ -241,7 +250,7 @@ int32_t update_refposition(void)
 		//MDR_PORTA->RXTX &= ~0x01; // PA0
 	}
 	
-	return pos<<0;	
+	//return pos<<0;	
 }
 
 extern void encoder_init(int32_t s);
@@ -260,6 +269,7 @@ int main()
 	struct pi_reg_state qreg;
 	struct pi_reg_state sreg;
 	struct pi_reg_state preg;
+	struct pi_reg_state linreg;
 	int32_t fsat = 0;
 	int32_t qref = 0;	
 	int32_t speed;
@@ -267,6 +277,7 @@ int main()
 	uint32_t phase = 0;
 	int32_t dq[2];	
 	int32_t abc[3];		
+	int32_t fstart;
 	
 	system_init();	
 	ssi_init();
@@ -286,6 +297,7 @@ int main()
 	reg_init(&qreg, KI_DQCUR, KP_DQCUR);	
 	reg_init(&sreg, KI_SPD, KP_SPD);	
 	reg_init(&preg, KI_POS, KP_POS);		
+	reg_init(&linreg, KI_LIN, KP_LIN);
 
 	// do some init actions
 	
@@ -318,17 +330,24 @@ int main()
 	dca = dca >> 10;
 	dcc = dcc >> 10;
 	startphase = startphase >> 10;
-	
+
+	zerolinpos = 520;
+	//zerolinpos = 650;
 	startlinpos = (linpos)/(reflinpos>>10);
+	reflinpos = zerolinpos;	
 
-	while(1);
+	//while(1);
 
-	uartposition = 0;
-	refpos = 0;
+	//uartposition = 0;
+	//refpos = 276*(startlinpos-zerolinpos)+startphase;
+	refpos = startphase;
 	position = startphase;
 	encoder_init(startphase);
 	pcurrent = 0;
-
+	zerophase = refpos;
+	
+	fstart = 1;
+	
 	while(1){
 		//MDR_PORTA->RXTX |= 0x01; // PA0	
 		adc_dma_wait();
@@ -343,8 +362,10 @@ int main()
 		phase = code & (1024-1);								
 		//MDR_DAC->DAC2_DATA = code;			
 
-		reflinpos = (0xfff&(adc_dma_buffer[0]));
-		linpos = (0xfff&(adc_dma_buffer[1]));
+		linpos = ((0xfff&adc_dma_buffer[1])<<10)/(0xfff&adc_dma_buffer[0]);
+
+		//reflinpos = (0xfff&(adc_dma_buffer[0]));
+		//linpos = (0xfff&(adc_dma_buffer[1]));
 		//MDR_DAC->DAC1_DATA = (reflinpos<<10)/linpos; //reflinpos;
 		//MDR_DAC->DAC2_DATA = linpos;
 
@@ -359,15 +380,29 @@ int main()
 			// 3kHz
 			//MDR_PORTA->RXTX |= 0x01; // PA0	
 
-			refpos = update_refposition() + startphase;
+			//refpos = update_refposition() + startphase;
+			update_refposition();
 
-			speed = get_speed(code, &position);		
+			speed = get_speed(code, &position);
 			//position = position - startphase;
 			//debug_signal(speed);
 			//debug_signal((startphase-position)>>0);
+	
+			if(fstart){
+				int32_t linerr = linpos - reflinpos;
+				if(abs(linerr) <= 2){
+					fstart = 0; 
+					refpos = position;
+					zerophase = position;
+				}
+				reg_update(&linreg, linerr, 0);			
+				refspeed = linreg.y>>12;
+			}
+			else{
+				reg_update(&preg, (refpos - position), 0);
+				refspeed = preg.y>>12;							
+			}
 
-			reg_update(&preg, (refpos - position), 0);
-			refspeed = preg.y>>12;			
 			//refspeed = 3000;
 
 			reg_update(&sreg, ((refspeed - speed)), 0);
