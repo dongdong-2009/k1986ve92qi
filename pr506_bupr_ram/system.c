@@ -133,8 +133,8 @@ void TimerConfig(void)
 	MDR_RST_CLK->TIM_CLOCK |= (1 << 26);
 	
 	MDR_TIMER3->CNT = 0;
-	//MDR_TIMER3->PSG = 3 - 1;   		/* prescaller */
-	MDR_TIMER3->PSG = 4 - 1;   		/* prescaller */
+	MDR_TIMER3->PSG = 3 - 1;   		/* prescaller */
+	//MDR_TIMER3->PSG = 4 - 1;   		/* prescaller */
 	MDR_TIMER3->ARR = 1024 - 1;		/* TIM4 period is 26.042KHz */
 	MDR_TIMER3->CCR1 = 512;
 	MDR_TIMER3->CCR2 = 512;

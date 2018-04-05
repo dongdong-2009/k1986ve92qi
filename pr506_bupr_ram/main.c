@@ -179,10 +179,10 @@ static inline void update_telemetry(void)
 		
 		// fill the telemetry array
 		telemetry.refpos = uartposition; //refpos-zerophase;
-		//telemetry.pos = position-zerophase;
+		telemetry.pos = (position-zerophase)/57;
 		
 		//telemetry.refpos = reflinpos - zerolinpos;
-		telemetry.pos = linpos;
+		//telemetry.pos = linpos - zerolinpos;
 		
 		telemetry.pcur = pcurrent >> 10;
 		telemetry.crc = 0;
@@ -347,6 +347,7 @@ int main()
 	zerophase = refpos;
 	
 	fstart = 1;
+	qref = 0;
 	
 	while(1){
 		//MDR_PORTA->RXTX |= 0x01; // PA0	
@@ -354,13 +355,13 @@ int main()
 		//MDR_PORTA->RXTX &= ~0x01; // PA0	
 
 		// get the currents from ADC	
-		ia = (0xfff&(adc_dma_buffer[2])) - dca;
-		ic = (0xfff&(adc_dma_buffer[3])) - dcc;
+		ia = -((0xfff&(adc_dma_buffer[2])) - dca);
+		ic = -((0xfff&(adc_dma_buffer[3])) - dcc);
 		ib = ia+ic;		
 
 		code = enc_crc(MDR_SSP1->DR);
 		phase = code & (1024-1);								
-		//MDR_DAC->DAC2_DATA = code;			
+		MDR_DAC->DAC2_DATA = code;			
 
 		linpos = ((0xfff&adc_dma_buffer[1])<<10)/(0xfff&adc_dma_buffer[0]);
 
@@ -403,7 +404,7 @@ int main()
 				refspeed = preg.y>>12;							
 			}
 
-			//refspeed = 3000;
+			//refspeed = 1000;
 
 			reg_update(&sreg, ((refspeed - speed)), 0);
 			qref = sreg.y>>12;
@@ -470,19 +471,18 @@ int main()
 			if(refspeed == -1000) refspeed = 1000;
 			else refspeed = -1000;
 		}*/		
-		
-		//qref = -100;
+//---------------------------------------------		
+/*		//qref = 100;
 		
  		// current regulator debug
-		/*if( (0xfff&tcnt) == 0){
+		if( (0xfff&tcnt) == 0){
 			if(qref == -100) qref = 100; // 100 is abt 1A
 			else qref = -100;
-		}*/
-		
-		/*
+		}		
+
 		debug_signal(ib<<2);
 
-		ed = qref-ib;
+		ed = (qref-ib);
 		reg_update(&dreg, ed , fsat);
 		
 		vd = dreg.y>>12;
@@ -501,6 +501,7 @@ int main()
 		pwm_setb(vd);		
 		continue;
 */
+//---------------------------------------------		
 
 		// vector sync motor controller
 		phase = 1023&(phase+900);    // phase offset for correct rotor position
