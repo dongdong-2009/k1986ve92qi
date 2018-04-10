@@ -1,32 +1,36 @@
 #include "gdef.h"
 
-void SysTick_Handler(void);
-extern void TIMER1_Handler(void);
-extern void TIMER3_Handler(void);
-extern void ADC_Handler(void);
-void UART1_Handler(void);
-
 uint32_t system_time;
-void (* table_interrupt_vector[48])(void) __attribute__((aligned (4*64)));
 
 uint8_t uart_buf[16];
 uint32_t uart_rxidx = 0;
+
+const uint32_t 	PWM_MASK = 	(0x02 << (2<<1)) + (0x02 << (3<<1)) +
+							(0x02 << (4<<1)) + (0x02 << (5<<1)) +
+							(0x02 << (6<<1)) + (0x02 << (7<<1)) +
+							(0x02 << (8<<1)) + (0x02 << (9<<1));
 
 //--- Ports configuration ---
 void PortConfig()
 {
 	MDR_RST_CLK->PER_CLOCK |= 1<<21;	 	//clock of PORTA ON	
 	MDR_PORTA->FUNC = 0;
-	MDR_PORTA->RXTX = 0; 
+	MDR_PORTA->ANALOG = 0xffff;
+	MDR_PORTA->OE = 0xffff;
+	MDR_PORTA->PWR = 0xffffffff;
+	MDR_PORTA->RXTX = 0; 	
+	
 	// pa0 - test out
-	MDR_PORTA->OE |= 1<<0;
+	/*MDR_PORTA->OE |= 1<<0;
 	MDR_PORTA->ANALOG |= 1<<0;
 	MDR_PORTA->PWR |= (0xff << (0<<1));
+	*/
 	
-	// pa3 - tmr1_ch2
+	/*// pa3 - tmr1_ch2
 	MDR_PORTA->OE &= ~(1<<3);				// вход
 	MDR_PORTA->ANALOG |= 1<<3;				// цифра
 	MDR_PORTA->FUNC = (0x2<<(3<<1));		// альтернативная функц - tmr1_ch2
+	*/
 
 	// port B
 	// порты для ssp PB13-CLK PB14-RXD
@@ -38,12 +42,18 @@ void PortConfig()
 	MDR_PORTB->OE |= (1<<13);
 	MDR_PORTB->OE &= ~(1<<14);
 	
+	// A0-A6 PB0-PB6
+	MDR_PORTB->ANALOG |= 0xffff;
+	MDR_PORTB->PWR |= (0x3<<(3<<1)) + (0x3<<(4<<1)) + (0x3<<(5<<1)) + (0x3<<(6<<1)) + 
+						(0x3<<(8<<1)) + (0x3<<(10<<1)) + (0x3<<(11<<1));
+	MDR_PORTB->OE |= (1<<3) + (1<<4) + (1<<5) + (1<<6) + (1<<8) + (1<<10) +(1<<11);
+	MDR_PORTB->PD |= (0x07<<16);
+	
 	// порты для uart1 PB5-TXD PB6-RXD
-	MDR_PORTB->FUNC &= ~( (0x3<<(5<<1)) + (0x3<<(6<<1)) );
-	MDR_PORTB->FUNC |= ( (0x2<<(5<<1)) + (0x02<<(6<<1)) );  			/* альтернативная функция */
-	MDR_PORTB->ANALOG |= (1<<5) + (1<<6);								/* digital */
-	//MDR_PORTB->PWR |= (0x3<<(5<<1)) + (0x3<<(6<<1));					// max power of port
-	//MDR_PORTB->OE |= (1<<1);
+	/*MDR_PORTB->FUNC &= ~( (0x3<<(5<<1)) + (0x3<<(6<<1)) );
+	MDR_PORTB->FUNC |= ( (0x2<<(5<<1)) + (0x02<<(6<<1)) );  			
+	MDR_PORTB->ANALOG |= (1<<5) + (1<<6);								
+	*/
 	
 	/* port C
 	 * PC0 		nRE_1
@@ -62,28 +72,32 @@ void PortConfig()
 					  (0x02 << (6<<1)) + (0x02 << (7<<1)) +
 					  (0x02 << (8<<1)) + (0x02 << (9<<1));
 	
-	MDR_PORTC->ANALOG  = 0xffff;													/* all digital */
-	MDR_PORTC->PWR = 0xffffffff;													/* max power of port */
+	MDR_PORTC->ANALOG  = 0xffff;													
+	MDR_PORTC->PWR = 0xffffffff;													
 	MDR_PORTC->OE =  0xffff;
 	MDR_PORTC->RXTX &= ~((1<<0) + (1<<1));
-	MDR_PORTC->RXTX |= ((1<<14) + (1<<15));
+	MDR_PORTC->RXTX |= ((1<<14) + (1<<15));	
 	
+
 	// port F
 	MDR_RST_CLK->PER_CLOCK |= 1<<29;	 						/* clock of PORTF ON */
 	MDR_PORTF->FUNC = 0;
 	MDR_PORTF->OE |= (1<<14) + (1<<15);					/* output mode */
 	MDR_PORTF->ANALOG |= (1<<14) + (1<<15);				/* digital mode */
-	MDR_PORTF->PWR = 0xffffffff;						/* max power */	
-	//MDR_PORTF->RXTX |= ((1<<14) + (1<<15));
-	MDR_PORTF->RXTX &= ~((1<<14) + (1<<15));
+	MDR_PORTF->PWR |= (3<<(14<<1)) + (3<<(15<<1));						/* max power */	
+	MDR_PORTF->RXTX |= ((1<<14) + (1<<15));
 	
-	// выход для dac1 dac2
+	/*// выход для dac1 dac2
 	MDR_RST_CLK->PER_CLOCK |= 1<<25;	 				//clock of PORTE ON	
 	MDR_PORTE->ANALOG &= ~((1<<0)+(1<<9)); // pe0 - dac2 out pe9 - dac1 out
+	*/
 	
-	// inputs for adc
+	/*// inputs for adc
 	MDR_RST_CLK->PER_CLOCK |= 1<<24;	 				//clock of PORTD ON	
-	MDR_PORTD->ANALOG &= ~( (1<<5) + (1<<6) + (1<<7) + (1<<8) + (1<<9) ); 			// PD5...PD11 входы АЦП
+	MDR_PORTD->ANALOG &= ~( (1<<7) + (1<<8) ); 			// PD5...PD11 входы АЦП
+	*/
+	
+	
 	
 }
 
@@ -105,7 +119,7 @@ void ClkConfig(void)
 	MDR_EEPROM->CMD |= (EEPROM_DEL << EEPROM_CMD_Delay_OFFS);
 						   						   	
 	system_time = 0;
-	//SysTick_Config(SYS_TICKS);
+	SysTick_Config(SYS_TICKS);
 	
 }
 
@@ -127,6 +141,7 @@ void TimerConfig(void)
 	MDR_TIMER1->IE |= TIMER_IE_CNT_ARR_EVENT_IE;					// прерывание по событию  ARR=CNT
 	MDR_TIMER1->CNTRL = TIMER_CNTRL_CNT_EN; 						// start count up	
 	//NVIC_EnableIRQ(Timer1_IRQn); 									// enable in nvic int from tim1
+
 	
 	// enable TIM3
 	MDR_RST_CLK->PER_CLOCK |= (1 << 16);
@@ -135,12 +150,11 @@ void TimerConfig(void)
 	
 	MDR_TIMER3->CNT = 0;
 	MDR_TIMER3->PSG = 3 - 1;   		/* prescaller */
-	//MDR_TIMER3->PSG = 4 - 1;   		/* prescaller */
 	MDR_TIMER3->ARR = 1024 - 1;		/* TIM4 period is 26.042KHz */
-	MDR_TIMER3->CCR1 = 512;
-	MDR_TIMER3->CCR2 = 512;
-	MDR_TIMER3->CCR3 = 512;
-	MDR_TIMER3->CCR4 = 200;
+	MDR_TIMER3->CCR1 = 0;
+	MDR_TIMER3->CCR2 = 0;
+	MDR_TIMER3->CCR3 = 0;
+	MDR_TIMER3->CCR4 = 800;
 
 	// channel 1
 	MDR_TIMER3->CH1_CNTRL &= ~TIMER_CH_CNTRL_OCCM_Msk;				
@@ -183,8 +197,36 @@ void TimerConfig(void)
 	MDR_TIMER3->CH3_CNTRL1 |= (3 << TIMER_CH_CNTRL1_NSELO_Pos);	    						// на инверсный выход канала 1 идет сигнал с DTG
 	MDR_TIMER3->CH3_CNTRL1 |= (1 << TIMER_CH_CNTRL1_NSELOE_Pos);	    						// инверсный выход канала 1 всегда работает на выход на OE всегда 1		
 	MDR_TIMER3->CH3_CNTRL2 |= (1<<3); // CRRRLD on
+	
+	// channel 4
+	MDR_TIMER3->CH4_CNTRL &= ~TIMER_CH_CNTRL_OCCM_Msk;					
+	MDR_TIMER3->CH4_CNTRL |= (7 << TIMER_CH_CNTRL_OCCM_Pos);									// 111: 0, если DIR= 0 (счет вверх), CNT<CCR, иначе 1
+	
+	MDR_TIMER3->CH4_CNTRL1 &= ~(TIMER_CH_CNTRL1_SELO_Msk | TIMER_CH_CNTRL1_SELOE_Msk);		// настройка прямого выхода канала 1
+	MDR_TIMER3->CH4_CNTRL1 |= (3 << TIMER_CH_CNTRL1_SELO_Pos);	    							// на прямой выход канала 1 идет сигнал с DTG
+	MDR_TIMER3->CH4_CNTRL1 |= (1 << TIMER_CH_CNTRL1_SELOE_Pos);	    						// прямой выход канала 1 всегда работает на выход на OE всегда 1
+	
+	MDR_TIMER3->CH4_CNTRL1 &= ~(TIMER_CH_CNTRL1_NSELO_Msk | TIMER_CH_CNTRL1_NSELOE_Msk);		// настройка инверсного выхода канала 1
+	MDR_TIMER3->CH4_CNTRL1 |= (3 << TIMER_CH_CNTRL1_NSELO_Pos);	    						// на инверсный выход канала 1 идет сигнал с DTG
+	MDR_TIMER3->CH4_CNTRL1 |= (1 << TIMER_CH_CNTRL1_NSELOE_Pos);	    						// инверсный выход канала 1 всегда работает на выход на OE всегда 1		
+	MDR_TIMER3->CH4_CNTRL2 |= (1<<3); // CRRRLD on	
+
+	// setting for dead time generator (DTG)
+	//MDR_TIMER3->CH1_DTG |= (1 << 4);
+	//MDR_TIMER3->CH1_DTG |= 15;
+	MDR_TIMER3->CH1_DTG |= ((0xff&(150)) << 5); 					// delay DTG	
+	MDR_TIMER3->CH2_DTG |= ((0xff&(150)) << 5); 					// delay DTG	
+	MDR_TIMER3->CH3_DTG |= ((0xff&(150)) << 5); 					// delay DTG	
+	MDR_TIMER3->CH4_DTG |= ((0xff&(150)) << 5); 					// delay DTG		
+
+	MDR_TIMER3->IE |= TIMER_IE_CNT_ARR_EVENT_IE;					// прерывание по событию  ARR=CNT
+	NVIC_EnableIRQ(Timer3_IRQn); 									// enable in nvic int from tim3	
+
+	MDR_TIMER3->CNTRL = TIMER_CNTRL_CNT_EN; 						// start count up
+}
 
 
+/*
 	// channel 4
 	MDR_TIMER3->CH4_CNTRL &= ~TIMER_CH_CNTRL_OCCM_Msk;					
 	MDR_TIMER3->CH4_CNTRL |= (7 << TIMER_CH_CNTRL_OCCM_Pos);									// 111: 0, если DIR= 0 (счет вверх), CNT<CCR, иначе 1
@@ -209,29 +251,9 @@ void TimerConfig(void)
 	MDR_TIMER3->IE |= TIMER_IE_CNT_ARR_EVENT_IE;					// прерывание по событию  ARR=CNT
 	NVIC_EnableIRQ(Timer3_IRQn); 									// enable in nvic int from tim3	
 
-	MDR_TIMER3->CNTRL = TIMER_CNTRL_CNT_EN; 						// start count up
-}
+	MDR_TIMER3->CNTRL = TIMER_CNTRL_CNT_EN; 						// start count up 
+*/
 
-void set_ram_vt()
-{
-	// copy vt with default values from flash to ram
-	uint32_t i = 0;
-	uint32_t *ps = 0;
-	uint32_t *pd = (uint32_t*) table_interrupt_vector;
-	
-	for(i = 0; i < 48; i++){
-		*pd++ = ps[i];
-	}
-	
-	// set vtor
-	SCB->VTOR = ((uint32_t)table_interrupt_vector);
-	table_interrupt_vector[15] = SysTick_Handler;
-	table_interrupt_vector[22] = UART1_Handler;	
-	table_interrupt_vector[30] = TIMER1_Handler;
-	table_interrupt_vector[32] = TIMER3_Handler;
-	table_interrupt_vector[33] = ADC_Handler;
-	
-}
 
 void uart_init(void)
 {
@@ -268,7 +290,6 @@ void uart_init(void)
 
 void system_init()
 {
-	set_ram_vt();
 	ClkConfig();
 	PortConfig();
 	TimerConfig();
@@ -287,7 +308,7 @@ void SysTick_Handler(void)
 extern uint32_t tcnt;	
 extern uint32_t tpll;
 
-void UART1_Handler(void)
+void UART1_IRQHandler(void)
 {
 	//MDR_PORTA->RXTX |= 0x01; // PA0	
 	
