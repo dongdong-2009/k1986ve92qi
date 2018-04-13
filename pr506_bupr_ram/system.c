@@ -44,6 +44,7 @@ void PortConfig()
 	MDR_PORTB->ANALOG |= (1<<5) + (1<<6);								/* digital */
 	//MDR_PORTB->PWR |= (0x3<<(5<<1)) + (0x3<<(6<<1));					// max power of port
 	//MDR_PORTB->OE |= (1<<1);
+	MDR_PORTB->ANALOG |= 0x1f;
 	
 	/* port C
 	 * PC0 		nRE_1

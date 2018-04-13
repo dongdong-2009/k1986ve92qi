@@ -4,9 +4,6 @@
 #define NE 12
 #define MAXENC (2<<(NE-1))
 
-#define ST_FAULT (1<<0)
-#define ST_READY (1<<1)
-
 extern void adc_dma_init(void);
 extern void adc_dma_start(void);
 extern void adc_dma_wait(void);
@@ -51,12 +48,17 @@ static int32_t uartposition = 0;
  * [2] - снять тормоз привода 1
  * [3] - включить/выключить режим эмуляции работы приводов
  * [4] - включить/выключить привод
+ * [5] - 
+ * [6] - статус силового . пит. 1 - норм
+ * [7] - статус приборного пит. 1 - норм
  */
-#define CW_BRAKE3	(1<<0)
-#define CW_BRAKE2 	(1<<1)
-#define CW_BRAKE1	(1<<2)
+#define CW_BRKOFF3	(1<<0)
+#define CW_BRKOFF2 	(1<<1)
+#define CW_BRKOFF1	(1<<2)
 #define CW_EMUL		(1<<3)
 #define CW_PWRON	(1<<4)
+#define CW_UPWSTS	(1<<6)
+#define CW_U27STS	(1<<7)
 
 uint8_t control_word = 0;
 
@@ -64,8 +66,15 @@ uint8_t control_word = 0;
  * [0] - ошибка привода
  * [1] - готовность привода
  * [2] - индикация режима эмуляции 
- * [3] - индикация включения привода
+ * [3] - индикация включения питания привода
+ * [4] - индикация готовности к приему команд
  */
+ 
+#define ST_FAULT (1<<0)
+#define ST_READY (1<<1) 
+#define ST_PWRON (1<<3) 
+#define ST_INTRDY (1<<4)
+ 
 uint8_t status_word = 0;
 
 int32_t (*position_proc)(void) = 0;
@@ -75,6 +84,10 @@ static struct pi_reg_state qreg;
 static struct pi_reg_state sreg;
 static struct pi_reg_state preg;
 static struct pi_reg_state linreg;
+
+static int32_t test1_positioning_proc(void);
+static int32_t test2_positioning_proc(void);
+static int32_t test3_positioning_proc(void);
 
 //------------------------------------------
 static inline void brake_on()
@@ -234,29 +247,6 @@ static inline void update_telemetry(void)
 		if(t < 512) MDR_TIMER1->CNT += 1;
 		else if(t > 512) MDR_TIMER1->CNT -= 1;	
 		
-		/*// fill the telemetry array
-		telemetry.refpos = uartposition; //refpos-zerophase;
-		telemetry.pos = (position-zerophase)/57;
-		
-		//telemetry.refpos = reflinpos - zerolinpos;
-		//telemetry.pos = linpos - zerolinpos;
-		
-		telemetry.pcur = pcurrent >> 10;
-		telemetry.crc = 0;
-		
-		p = (uint8_t *)&telemetry;	
-				
-		// send the telemetry array
-		MDR_UART1->DR = *p++;
-		MDR_UART1->DR = *p++;	
-		MDR_UART1->DR = *p++;	
-		MDR_UART1->DR = *p++;	
-		MDR_UART1->DR = *p++;	
-		MDR_UART1->DR = *p++;	
-		MDR_UART1->DR = *p++;	
-		MDR_UART1->DR = *p++;			
-		*/
-		
 		int16_t pos = (position-zerophase)/57;
 		uint8_t tx = 0;
 		
@@ -266,7 +256,7 @@ static inline void update_telemetry(void)
 		tx ^= MDR_UART1->DR = pos;
 		tx ^= MDR_UART1->DR = pos>>8;
 		tx ^= MDR_UART1->DR = pcurrent;
-		tx ^= MDR_UART1->DR = pcurrent >> 18;
+		tx ^= MDR_UART1->DR = pcurrent>>8;
 		tx ^= MDR_UART1->DR = status_word;
 		MDR_UART1->DR = tx;
 	
@@ -342,6 +332,7 @@ void update_refposition(void)
 static int32_t positioning_timeout = 0;
 int32_t fault_positioning_proc()
 {
+	status_word = ST_FAULT;	
 	motor_off();
 	brake_on();
 	return 0;
@@ -349,35 +340,55 @@ int32_t fault_positioning_proc()
 
 int32_t remote_positioning_proc()
 {
-	if(5000 == positioning_timeout){
-		status_word = ST_FAULT;
+	status_word |= ST_READY;
+	
+	/*if(0 == (control_word & CW_UPWSTS)){
 		position_proc = &fault_positioning_proc;
 		return 0;
-	}
-	positioning_timeout++;		
+	}*/		
 	
 	int32_t err = refpos - position;
-	if(abs(err) <= 2){
-		positioning_timeout = 0;
-//		return 0;
-	}
-	
 	reg_update(&preg, err, 0);
 	return preg.y>>12;		
 }
 
-int32_t wait_positioning_proc()
+int32_t wait_for_launch_proc()
 {
-	if(control_word & CW_BRAKE1){
-		brake_off();
+	status_word |= ST_PWRON;
+	
+	if(0 == (control_word & CW_UPWSTS)){
+		position_proc = &fault_positioning_proc;
+		return 0;
 	}	
 	
-	if(control_word & CW_PWRON){
-		//refpos = zerophase;
+	motor_on();
+	
+	if(control_word & CW_BRKOFF1){
 		position_proc = &remote_positioning_proc;
-		positioning_timeout = 0;
-		motor_on();		
-	}	
+		brake_off();
+	}		
+	
+	return 0;	
+}
+
+int32_t wait_positioning_proc()
+{
+	status_word = ST_INTRDY;
+	
+	if(control_word & CW_PWRON){
+		//position_proc = &wait_for_launch_proc;
+		
+		zerophase = position;
+		refpos = zerophase+5000;
+		position_proc = &test1_positioning_proc;
+		positioning_timeout = 0;	
+		
+		status_word |= ST_PWRON;	
+		
+		motor_on();
+		brake_off();
+		
+	}
 	
 	return 0;
 }
@@ -385,7 +396,6 @@ int32_t wait_positioning_proc()
 int32_t test3_positioning_proc(void)
 {
 	if(positioning_timeout >= 5000){
-		status_word = ST_FAULT;
 		position_proc = &fault_positioning_proc;
 		return 0;
 	}
@@ -396,10 +406,10 @@ int32_t test3_positioning_proc(void)
 		if(positioning_timeout >= 4000)
 		{
 			refpos = zerophase;
-			position_proc = &wait_positioning_proc;
+			//position_proc = &wait_positioning_proc;
+			position_proc = &wait_for_launch_proc;
 			positioning_timeout = 0;
 			
-			status_word = ST_READY;
 			motor_off();
 			brake_on();				
 			
@@ -413,7 +423,6 @@ int32_t test3_positioning_proc(void)
 int32_t test2_positioning_proc(void)
 {
 	if(positioning_timeout >= 5000){
-		status_word = ST_FAULT;
 		position_proc = &fault_positioning_proc;
 		return 0;
 	}
@@ -433,7 +442,6 @@ int32_t test2_positioning_proc(void)
 int32_t test1_positioning_proc(void)
 {
 	if(positioning_timeout >= 5000){
-		status_word = ST_FAULT;
 		position_proc = &fault_positioning_proc;
 		return 0;
 	}
@@ -454,7 +462,6 @@ int32_t test1_positioning_proc(void)
 int32_t start_positioning_proc(void)
 {
 	if(positioning_timeout >= 5000){
-		status_word = ST_FAULT;
 		position_proc = &fault_positioning_proc;
 		return 0;
 	}
@@ -517,6 +524,7 @@ int main()
 	// do some init actions
 	
 	control_word = 0;
+	status_word = 0;
 	
 	for(i=0; i<1024; i++)
 	{
@@ -562,18 +570,21 @@ int main()
 	encoder_init(startphase);
 	pcurrent = 0;
 	zerophase = refpos;
-	
+
 	fstart = 1;
 	qref = 0;
 
+	brake_on();
+	motor_off();
 	positioning_timeout = 0;
-	position_proc = &start_positioning_proc;
+	//position_proc = &start_positioning_proc;
+	position_proc = &wait_positioning_proc;
 	
 	status_word = 0;
 	
-	brake_off();
-	motor_on();
-
+	//brake_off();
+	//motor_on();
+	
 	while(1){
 		//MDR_PORTA->RXTX |= 0x01; // PA0	
 		adc_dma_wait();
@@ -616,7 +627,7 @@ int main()
 			//debug_signal((startphase-position)>>0);
 	
 			refspeed = position_proc();			
-			//refspeed = 1000;
+			//refspeed = 5000;
 
 			reg_update(&sreg, ((refspeed - speed)), 0);
 			qref = sreg.y>>12;
