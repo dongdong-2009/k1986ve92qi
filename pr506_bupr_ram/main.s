@@ -1143,18 +1143,18 @@ Disassembly of section .text:
 200009f6:	2b00      	cmp	r3, #0
 200009f8:	d01b      	beq.n	20000a32 <wait_positioning_proc+0x4e>
 200009fa:	4b11      	ldr	r3, [pc, #68]	; (20000a40 <wait_positioning_proc+0x5c>)
-200009fc:	681b      	ldr	r3, [r3, #0]
-200009fe:	4a11      	ldr	r2, [pc, #68]	; (20000a44 <wait_positioning_proc+0x60>)
-20000a00:	6013      	str	r3, [r2, #0]
-20000a02:	4b10      	ldr	r3, [pc, #64]	; (20000a44 <wait_positioning_proc+0x60>)
-20000a04:	681b      	ldr	r3, [r3, #0]
-20000a06:	f503 539c 	add.w	r3, r3, #4992	; 0x1380
-20000a0a:	3308      	adds	r3, #8
-20000a0c:	4a0e      	ldr	r2, [pc, #56]	; (20000a48 <wait_positioning_proc+0x64>)
-20000a0e:	6013      	str	r3, [r2, #0]
-20000a10:	4b0e      	ldr	r3, [pc, #56]	; (20000a4c <wait_positioning_proc+0x68>)
+200009fc:	4a11      	ldr	r2, [pc, #68]	; (20000a44 <wait_positioning_proc+0x60>)
+200009fe:	601a      	str	r2, [r3, #0]
+20000a00:	4b11      	ldr	r3, [pc, #68]	; (20000a48 <wait_positioning_proc+0x64>)
+20000a02:	681b      	ldr	r3, [r3, #0]
+20000a04:	4a11      	ldr	r2, [pc, #68]	; (20000a4c <wait_positioning_proc+0x68>)
+20000a06:	6013      	str	r3, [r2, #0]
+20000a08:	4b10      	ldr	r3, [pc, #64]	; (20000a4c <wait_positioning_proc+0x68>)
+20000a0a:	681b      	ldr	r3, [r3, #0]
+20000a0c:	f503 539c 	add.w	r3, r3, #4992	; 0x1380
+20000a10:	3308      	adds	r3, #8
 20000a12:	4a0f      	ldr	r2, [pc, #60]	; (20000a50 <wait_positioning_proc+0x6c>)
-20000a14:	601a      	str	r2, [r3, #0]
+20000a14:	6013      	str	r3, [r2, #0]
 20000a16:	4b0f      	ldr	r3, [pc, #60]	; (20000a54 <wait_positioning_proc+0x70>)
 20000a18:	2200      	movs	r2, #0
 20000a1a:	601a      	str	r2, [r3, #0]
@@ -1171,11 +1171,11 @@ Disassembly of section .text:
 20000a36:	bd80      	pop	{r7, pc}
 20000a38:	20002e3d 	.word	0x20002e3d
 20000a3c:	20002e3c 	.word	0x20002e3c
-20000a40:	20002e28 	.word	0x20002e28
-20000a44:	20002e2c 	.word	0x20002e2c
-20000a48:	20002e00 	.word	0x20002e00
-20000a4c:	20002e40 	.word	0x20002e40
-20000a50:	20000b89 	.word	0x20000b89
+20000a40:	20002e40 	.word	0x20002e40
+20000a44:	20000989 	.word	0x20000989
+20000a48:	20002e28 	.word	0x20002e28
+20000a4c:	20002e2c 	.word	0x20002e2c
+20000a50:	20002e00 	.word	0x20002e00
 20000a54:	20002e9c 	.word	0x20002e9c
 
 20000a58 <test3_positioning_proc>:
@@ -1375,60 +1375,60 @@ Disassembly of section .text:
 20000c18:	20000afd 	.word	0x20000afd
 20000c1c:	20002e74 	.word	0x20002e74
 
-20000c20 <start_positioning_proc>:
+20000c20 <zero_positioning_proc>:
 20000c20:	b580      	push	{r7, lr}
 20000c22:	b082      	sub	sp, #8
 20000c24:	af00      	add	r7, sp, #0
-20000c26:	4b1e      	ldr	r3, [pc, #120]	; (20000ca0 <start_positioning_proc+0x80>)
+20000c26:	4b1e      	ldr	r3, [pc, #120]	; (20000ca0 <zero_positioning_proc+0x80>)
 20000c28:	681b      	ldr	r3, [r3, #0]
 20000c2a:	f241 3287 	movw	r2, #4999	; 0x1387
 20000c2e:	4293      	cmp	r3, r2
-20000c30:	dd04      	ble.n	20000c3c <start_positioning_proc+0x1c>
-20000c32:	4b1c      	ldr	r3, [pc, #112]	; (20000ca4 <start_positioning_proc+0x84>)
-20000c34:	4a1c      	ldr	r2, [pc, #112]	; (20000ca8 <start_positioning_proc+0x88>)
+20000c30:	dd04      	ble.n	20000c3c <zero_positioning_proc+0x1c>
+20000c32:	4b1c      	ldr	r3, [pc, #112]	; (20000ca4 <zero_positioning_proc+0x84>)
+20000c34:	4a1c      	ldr	r2, [pc, #112]	; (20000ca8 <zero_positioning_proc+0x88>)
 20000c36:	601a      	str	r2, [r3, #0]
 20000c38:	2300      	movs	r3, #0
-20000c3a:	e02c      	b.n	20000c96 <start_positioning_proc+0x76>
-20000c3c:	4b18      	ldr	r3, [pc, #96]	; (20000ca0 <start_positioning_proc+0x80>)
+20000c3a:	e02c      	b.n	20000c96 <zero_positioning_proc+0x76>
+20000c3c:	4b18      	ldr	r3, [pc, #96]	; (20000ca0 <zero_positioning_proc+0x80>)
 20000c3e:	681b      	ldr	r3, [r3, #0]
 20000c40:	3301      	adds	r3, #1
-20000c42:	4a17      	ldr	r2, [pc, #92]	; (20000ca0 <start_positioning_proc+0x80>)
+20000c42:	4a17      	ldr	r2, [pc, #92]	; (20000ca0 <zero_positioning_proc+0x80>)
 20000c44:	6013      	str	r3, [r2, #0]
-20000c46:	4b19      	ldr	r3, [pc, #100]	; (20000cac <start_positioning_proc+0x8c>)
+20000c46:	4b19      	ldr	r3, [pc, #100]	; (20000cac <zero_positioning_proc+0x8c>)
 20000c48:	681a      	ldr	r2, [r3, #0]
-20000c4a:	4b19      	ldr	r3, [pc, #100]	; (20000cb0 <start_positioning_proc+0x90>)
+20000c4a:	4b19      	ldr	r3, [pc, #100]	; (20000cb0 <zero_positioning_proc+0x90>)
 20000c4c:	681b      	ldr	r3, [r3, #0]
 20000c4e:	1ad3      	subs	r3, r2, r3
 20000c50:	607b      	str	r3, [r7, #4]
 20000c52:	687b      	ldr	r3, [r7, #4]
 20000c54:	f113 0f02 	cmn.w	r3, #2
-20000c58:	db15      	blt.n	20000c86 <start_positioning_proc+0x66>
+20000c58:	db15      	blt.n	20000c86 <zero_positioning_proc+0x66>
 20000c5a:	687b      	ldr	r3, [r7, #4]
 20000c5c:	2b02      	cmp	r3, #2
-20000c5e:	dc12      	bgt.n	20000c86 <start_positioning_proc+0x66>
-20000c60:	4b14      	ldr	r3, [pc, #80]	; (20000cb4 <start_positioning_proc+0x94>)
+20000c5e:	dc12      	bgt.n	20000c86 <zero_positioning_proc+0x66>
+20000c60:	4b14      	ldr	r3, [pc, #80]	; (20000cb4 <zero_positioning_proc+0x94>)
 20000c62:	681b      	ldr	r3, [r3, #0]
-20000c64:	4a14      	ldr	r2, [pc, #80]	; (20000cb8 <start_positioning_proc+0x98>)
+20000c64:	4a14      	ldr	r2, [pc, #80]	; (20000cb8 <zero_positioning_proc+0x98>)
 20000c66:	6013      	str	r3, [r2, #0]
-20000c68:	4b13      	ldr	r3, [pc, #76]	; (20000cb8 <start_positioning_proc+0x98>)
+20000c68:	4b13      	ldr	r3, [pc, #76]	; (20000cb8 <zero_positioning_proc+0x98>)
 20000c6a:	681b      	ldr	r3, [r3, #0]
 20000c6c:	f503 539c 	add.w	r3, r3, #4992	; 0x1380
 20000c70:	3308      	adds	r3, #8
-20000c72:	4a12      	ldr	r2, [pc, #72]	; (20000cbc <start_positioning_proc+0x9c>)
+20000c72:	4a12      	ldr	r2, [pc, #72]	; (20000cbc <zero_positioning_proc+0x9c>)
 20000c74:	6013      	str	r3, [r2, #0]
-20000c76:	4b0b      	ldr	r3, [pc, #44]	; (20000ca4 <start_positioning_proc+0x84>)
-20000c78:	4a11      	ldr	r2, [pc, #68]	; (20000cc0 <start_positioning_proc+0xa0>)
+20000c76:	4b0b      	ldr	r3, [pc, #44]	; (20000ca4 <zero_positioning_proc+0x84>)
+20000c78:	4a11      	ldr	r2, [pc, #68]	; (20000cc0 <zero_positioning_proc+0xa0>)
 20000c7a:	601a      	str	r2, [r3, #0]
-20000c7c:	4b08      	ldr	r3, [pc, #32]	; (20000ca0 <start_positioning_proc+0x80>)
+20000c7c:	4b08      	ldr	r3, [pc, #32]	; (20000ca0 <zero_positioning_proc+0x80>)
 20000c7e:	2200      	movs	r2, #0
 20000c80:	601a      	str	r2, [r3, #0]
 20000c82:	2300      	movs	r3, #0
-20000c84:	e007      	b.n	20000c96 <start_positioning_proc+0x76>
+20000c84:	e007      	b.n	20000c96 <zero_positioning_proc+0x76>
 20000c86:	2200      	movs	r2, #0
 20000c88:	6879      	ldr	r1, [r7, #4]
-20000c8a:	480e      	ldr	r0, [pc, #56]	; (20000cc4 <start_positioning_proc+0xa4>)
+20000c8a:	480e      	ldr	r0, [pc, #56]	; (20000cc4 <zero_positioning_proc+0xa4>)
 20000c8c:	f000 f834 	bl	20000cf8 <reg_update>
-20000c90:	4b0c      	ldr	r3, [pc, #48]	; (20000cc4 <start_positioning_proc+0xa4>)
+20000c90:	4b0c      	ldr	r3, [pc, #48]	; (20000cc4 <zero_positioning_proc+0xa4>)
 20000c92:	68db      	ldr	r3, [r3, #12]
 20000c94:	131b      	asrs	r3, r3, #12
 20000c96:	4618      	mov	r0, r3

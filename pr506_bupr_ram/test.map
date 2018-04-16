@@ -30,7 +30,6 @@ Linker script and memory map
                 0x20000940                remote_positioning_proc
                 0x20000988                wait_for_launch_proc
                 0x200009e4                wait_positioning_proc
-                0x20000c20                start_positioning_proc
  .text          0x20000cc8      0x898 dsp.o
                 0x20000cc8                mycos
                 0x20000cd8                mysin
@@ -150,12 +149,12 @@ OUTPUT(blink.elf elf32-littlearm)
  .debug_info    0x00001866      0x3cb adc_dma.o
  .debug_info    0x00001c31      0x9c4 system.o
 
-.debug_abbrev   0x00000000      0x935
- .debug_abbrev  0x00000000      0x319 main.o
- .debug_abbrev  0x00000319      0x257 dsp.o
- .debug_abbrev  0x00000570       0x75 cos_tb.o
- .debug_abbrev  0x000005e5      0x10e adc_dma.o
- .debug_abbrev  0x000006f3      0x242 system.o
+.debug_abbrev   0x00000000      0x919
+ .debug_abbrev  0x00000000      0x2fd main.o
+ .debug_abbrev  0x000002fd      0x257 dsp.o
+ .debug_abbrev  0x00000554       0x75 cos_tb.o
+ .debug_abbrev  0x000005c9      0x10e adc_dma.o
+ .debug_abbrev  0x000006d7      0x242 system.o
 
 .debug_aranges  0x00000000       0xa0
  .debug_aranges
@@ -180,16 +179,16 @@ OUTPUT(blink.elf elf32-littlearm)
  .debug_line    0x000006ba       0xdf adc_dma.o
  .debug_line    0x00000799      0x18a system.o
 
-.debug_str      0x00000000      0xc2c
- .debug_str     0x00000000      0x69a main.o
-                                0x700 (size before relaxing)
- .debug_str     0x0000069a      0x132 dsp.o
+.debug_str      0x00000000      0xc2b
+ .debug_str     0x00000000      0x699 main.o
+                                0x6ff (size before relaxing)
+ .debug_str     0x00000699      0x132 dsp.o
                                 0x1de (size before relaxing)
- .debug_str     0x000007cc        0x9 cos_tb.o
+ .debug_str     0x000007cb        0x9 cos_tb.o
                                 0x114 (size before relaxing)
- .debug_str     0x000007d5      0x185 adc_dma.o
+ .debug_str     0x000007d4      0x185 adc_dma.o
                                 0x3fc (size before relaxing)
- .debug_str     0x0000095a      0x2d2 system.o
+ .debug_str     0x00000959      0x2d2 system.o
                                 0x612 (size before relaxing)
 
 .comment        0x00000000       0x6e

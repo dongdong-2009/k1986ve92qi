@@ -88,6 +88,7 @@ static struct pi_reg_state linreg;
 static int32_t test1_positioning_proc(void);
 static int32_t test2_positioning_proc(void);
 static int32_t test3_positioning_proc(void);
+static int32_t zero_positioning_proc(void);
 
 //------------------------------------------
 static inline void brake_on()
@@ -376,11 +377,12 @@ int32_t wait_positioning_proc()
 	status_word = ST_INTRDY;
 	
 	if(control_word & CW_PWRON){
-		//position_proc = &wait_for_launch_proc;
+		position_proc = &wait_for_launch_proc;
 		
 		zerophase = position;
 		refpos = zerophase+5000;
-		position_proc = &test1_positioning_proc;
+		//position_proc = &test1_positioning_proc;
+		//position_proc = &zero_positioning_proc;
 		positioning_timeout = 0;	
 		
 		status_word |= ST_PWRON;	
@@ -459,7 +461,7 @@ int32_t test1_positioning_proc(void)
 	return preg.y>>12;		
 }
 
-int32_t start_positioning_proc(void)
+int32_t zero_positioning_proc(void)
 {
 	if(positioning_timeout >= 5000){
 		position_proc = &fault_positioning_proc;
