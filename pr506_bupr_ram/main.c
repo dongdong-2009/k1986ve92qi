@@ -584,8 +584,9 @@ int main()
 	
 	status_word = 0;
 	
-	//brake_off();
-	//motor_on();
+	position_proc = &remote_positioning_proc;
+	brake_off();
+	motor_on();
 	
 	while(1){
 		//MDR_PORTA->RXTX |= 0x01; // PA0	
@@ -593,8 +594,8 @@ int main()
 		//MDR_PORTA->RXTX &= ~0x01; // PA0	
 
 		// get the currents from ADC	
-		ia = -((0xfff&(adc_dma_buffer[2])) - dca);
-		ic = -((0xfff&(adc_dma_buffer[3])) - dcc);
+		ia = ((0xfff&(adc_dma_buffer[2])) - dca);
+		ic = ((0xfff&(adc_dma_buffer[3])) - dcc);
 		ib = ia+ic;		
 
 		code = enc_crc(MDR_SSP1->DR);
@@ -629,7 +630,7 @@ int main()
 			//debug_signal((startphase-position)>>0);
 	
 			refspeed = position_proc();			
-			//refspeed = 5000;
+			//refspeed = 1000;
 
 			reg_update(&sreg, ((refspeed - speed)), 0);
 			qref = sreg.y>>12;
@@ -757,11 +758,11 @@ int main()
 		dq[0] = dreg.y>>2;
 		dq[1] = qreg.y>>2;
 
-/*
+
 		// simple sync motor controller
-		dq[0] = 0;
-		dq[1] = 100*1024;
-*/	
+		/*dq[0] = 0;
+		dq[1] = 100*1024;*/
+	
 		// set the pwm controller
 		fsat = svpwm(abc, dq, phase);
 		//fsat = sinpwm(abc, dq, phase);						
