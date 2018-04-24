@@ -1,6 +1,6 @@
 #include "MDR32Fx.h"
 
-#define DMA_TRANS_NUM 2
+#define DMA_TRANS_NUM 4
 #define DMA_DST_INC 0x02
 #define DMA_DST_SZ	0x02
 #define DMA_SRC_INC	0x03
@@ -26,14 +26,17 @@ void adc_init()
 	 
 	// множ преобр
 	MDR_ADC->ADC1_CFG = 0 ;
-	MDR_ADC->ADC1_CFG |= ADC1_CFG_REG_ADON + ADC1_CFG_REG_CLKS +
-					 ADC1_CFG_REG_CHCH;    							// переключение каналов выбранных в регистре CHSEL
+	MDR_ADC->ADC1_CFG |= ADC1_CFG_REG_ADON + ADC1_CFG_REG_CLKS + 
+					 (0<<ADC2_CFG_DELAY_GO_Pos) + ADC1_CFG_REG_CHCH;    		// переключение каналов выбранных в регистре CHSEL
 					 				
-	MDR_ADC->ADC1_CHSEL |= (1<<7) + (1<<8); 				// выбор каналов для авт переключения
-	MDR_ADC->ADC1_STATUS = ADC_STATUS_ECOIF_IE; 							// прерывание по окончанию преобразования
+	//MDR_ADC->ADC1_CHSEL |= (1<<7) + (1<<8); 				// выбор каналов для авт переключения
+	MDR_ADC->ADC1_CHSEL |= (1<<5) + (1<<6) + (1<<7) + (1<<8); 				// выбор каналов для авт переключения
+	//MDR_ADC->ADC1_CHSEL |= (1<<5) + (1<<6);// + (1<<7); 						// выбор каналов для авт переключения
+	
+	MDR_ADC->ADC1_STATUS = ADC_STATUS_ECOIF_IE; 								// прерывание по окончанию преобразования
 	//MDR_ADC->ADC1_CFG |= ADC1_CFG_REG_SAMPLE; 	// start ADC
 	
-	//NVIC_EnableIRQ(ADC_IRQn);					
+	//NVIC_EnableIRQ(ADC_IRQn);		
 }
 
 void dma_init(void)
@@ -53,7 +56,7 @@ void dma_init(void)
 	
 	// setting DMA control struct in SRAM
 	dma_ctr_str[DMA_CH_POS].SourceEndPointer = (uint32_t)(&(MDR_ADC->ADC1_RESULT));
-	dma_ctr_str[DMA_CH_POS].DestinationEndPointer = (uint32_t)(&adc_dma_buffer[1]);
+	dma_ctr_str[DMA_CH_POS].DestinationEndPointer = (uint32_t)(&adc_dma_buffer[DMA_TRANS_NUM-1]);
 	dma_ctr_str[DMA_CH_POS].Control = (DMA_DST_INC<<30) + (DMA_DST_SZ<<28) + 
 							(DMA_SRC_INC<<26) + (DMA_SRC_SZ<<24) + 
 							((DMA_TRANS_NUM-1)<<4) + 0x01;	
@@ -67,15 +70,21 @@ void adc_dma_init(void)
 
 void adc_dma_start(void)
 {
-	//int buf = ADC->ADC1_RESULT;	
-	MDR_ADC->ADC1_CFG |= ADC1_CFG_REG_SAMPLE; 	// start ADC
-	MDR_DMA->CHNL_ENABLE_SET = 1<<DMA_CH_POS;			//enable channel DMA_CH_POS for ADC			
+	//register int buf = MDR_ADC->ADC1_RESULT;
+
+	MDR_ADC->ADC1_CFG = 0;
+	MDR_ADC->ADC1_CFG = ADC1_CFG_REG_ADON + ADC1_CFG_REG_CLKS + ADC1_CFG_REG_CHCH + ADC1_CFG_REG_SAMPLE;
+
+	//MDR_ADC->ADC1_CFG |= ADC1_CFG_REG_SAMPLE; 			// start ADC
+	
+	MDR_DMA->CHNL_ENABLE_SET = 1<<DMA_CH_POS;			// enable channel DMA_CH_POS for ADC			
 }
 
 void adc_dma_wait(void)
 {
 	while( (dma_ctr_str[DMA_CH_POS].Control & 0x07) );	// waiting for the dma transaction to complete
 	MDR_ADC->ADC1_CFG &= ~ADC1_CFG_REG_SAMPLE;  // stop ADC	
+
 	
 	// once again set control struct
 	dma_ctr_str[DMA_CH_POS].Control = (DMA_DST_INC<<30) + (DMA_DST_SZ<<28) + 

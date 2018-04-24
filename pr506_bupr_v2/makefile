@@ -1,5 +1,5 @@
 ##################################
-# stm32 minimal example Makefile
+# Makefile
 ##################################
 
 CC = arm-none-eabi-gcc
@@ -16,7 +16,12 @@ CFLAGS  = -c -fno-common -g -mcpu=cortex-m3 -mthumb $(INCLUDES)
 LFLAGS  = -nostartfiles -T$(LKR_SCRIPT) 
 CPFLAGS = -Obinary
 
+IMAGE = $(shell pwd)/blink.elf
+
 all: blink.bin
+
+startup.o: startup.c
+	$(CC) $(CFLAGS) -O0 -o startup.o startup.c
 
 system.o: system.c
 	$(CC) $(CFLAGS) -O0 -o system.o system.c
@@ -33,8 +38,8 @@ dsp.o: dsp.c
 main.o: main.c
 	$(CC) $(CFLAGS) -O0 -o main.o main.c
 
-blink.elf: main.o dsp.o cos_tb.o adc_dma.o gdef.h system.o
-	$(LD) $(LFLAGS) -Map test.map -o blink.elf main.o dsp.o cos_tb.o adc_dma.o system.o
+blink.elf: main.o dsp.o cos_tb.o adc_dma.o gdef.h system.o startup.o
+	$(LD) $(LFLAGS) -Map test.map -o blink.elf main.o dsp.o cos_tb.o adc_dma.o system.o startup.o
 
 blink.bin: blink.elf
 	$(CP) $(CPFLAGS) blink.elf main.bin
@@ -42,6 +47,9 @@ blink.bin: blink.elf
 clean:
 	rm -rf *.o *.elf *.bin *.map
 
+load: blink.elf
+	../mdr1986x-JFlash-master/loadjlink $(IMAGE)
+
 debug: blink.elf
-#	arm-none-eabi-gdb -ex "target remote localhost:2331" main.elf
+#	arm-none-eabi-gdb -ex "target remote localhost:2331" blink.elf
 	arm-none-eabi-gdb

@@ -3,8 +3,6 @@
 
 #define NE 12
 #define MAXENC (2<<(NE-1))
-//#define CURRREG_DEBUG
-
 
 extern void adc_dma_init(void);
 extern void adc_dma_start(void);
@@ -41,10 +39,12 @@ int32_t zerophase = 0;
 uint32_t encoder_code;
 
 int32_t pcurrent = 0;
-
-int32_t gDebug;
+int32_t vpower = 0;
 
 static int32_t uartposition = 0;
+
+int32_t wait_for_launch_proc();
+int32_t wait_positioning_proc();
 
 /* Управляющее слово
  * [0] - снять тормоз привода 3
@@ -76,6 +76,7 @@ uint8_t control_word = 0;
  
 #define ST_FAULT (1<<0)
 #define ST_READY (1<<1) 
+#define ST_EMUL	 (1<<2) 
 #define ST_PWRON (1<<3) 
 #define ST_INTRDY (1<<4)
  
@@ -189,23 +190,7 @@ static inline void encoder_start(void)
 	MDR_SSP1->DR = 0x555; // start encoder request<---->
 }
 
-void ADC_Handler(void)
-{
-	register int buf = MDR_ADC->ADC1_RESULT;	
-	//MDR_PORTA->RXTX ^= 0x01; // PA0	
-}
-
-void TIMER1_Handler(void)
-{
-	MDR_TIMER1->STATUS = 0;
-	//MDR_PORTA->RXTX |= 0x01; // PA0
-	//debug_signal(MDR_TIMER1->CCR2);	
-	//update_pll();
-	//MDR_PORTA->RXTX &= ~0x01; // PA0
-	//ttlm = 1;	
-}
-
-void TIMER3_Handler(void)
+void Timer3_IRQHandler(void)
 {
 	//MDR_PORTA->RXTX ^= 0x01; // PA0	
 	MDR_TIMER3->STATUS = 0;
@@ -357,14 +342,36 @@ int32_t remote_positioning_proc()
 	return preg.y>>12;		
 }
 
+int32_t emulator_positioning_proc()
+{
+	if(0 == (control_word & CW_EMUL)){
+		position_proc = &wait_for_launch_proc;
+		status_word &= ~ST_EMUL;			
+	}				
+	else{
+		status_word |= ST_EMUL;	
+		position = refpos;
+	}
+	
+	return 0;
+}
+
 int32_t wait_for_launch_proc()
 {
 	status_word |= ST_PWRON;
 	
-	if(0 == (control_word & CW_UPWSTS)){
+	if(vpower < 2000)
+	{
 		position_proc = &fault_positioning_proc;
 		return 0;
 	}	
+	
+	if(0 == (control_word & CW_PWRON)){
+		motor_off();
+		position_proc = &wait_positioning_proc;
+		status_word &= ~ST_PWRON;		
+		return 0;
+	}
 	
 	motor_on();
 	
@@ -373,20 +380,25 @@ int32_t wait_for_launch_proc()
 		brake_off();
 	}		
 	
+	if(control_word & CW_EMUL){
+		position_proc = &emulator_positioning_proc;
+	}			
+	
 	return 0;	
 }
+
 
 int32_t wait_positioning_proc()
 {
 	status_word = ST_INTRDY;
 	
 	if(control_word & CW_PWRON){
-		position_proc = &wait_for_launch_proc;
+		//position_proc = &wait_for_launch_proc;
 		
 		zerophase = position;
-		refpos = zerophase+5000;
+		//refpos = zerophase+5000;
 		//position_proc = &test1_positioning_proc;
-		//position_proc = &zero_positioning_proc;
+		position_proc = &zero_positioning_proc;
 		positioning_timeout = 0;	
 		
 		status_word |= ST_PWRON;	
@@ -465,6 +477,7 @@ int32_t test1_positioning_proc(void)
 	return preg.y>>12;		
 }
 
+// work version
 int32_t zero_positioning_proc(void)
 {
 	if(positioning_timeout >= 5000){
@@ -473,7 +486,7 @@ int32_t zero_positioning_proc(void)
 	}
 	positioning_timeout++;		
 	
-	int32_t linerr = linpos - reflinpos;
+	int32_t linerr = reflinpos - linpos;
 	if(abs(linerr) <= 2){		
 		zerophase = position;
 		refpos = zerophase+5000;
@@ -486,12 +499,32 @@ int32_t zero_positioning_proc(void)
 	return linreg.y>>12;		
 }
 
+/*
+// test version
+int32_t zero_positioning_proc(void)
+{
+	if(positioning_timeout >= 5000){
+		position_proc = &fault_positioning_proc;
+		return 0;
+	}
+	positioning_timeout++;		
+	
+	int32_t linerr = reflinpos - linpos;
+	if(abs(linerr) <= 2){		
+		zerophase = position;
+		refpos = zerophase;
+		position_proc = &remote_positioning_proc;
+		positioning_timeout = 0;
+		return 0;
+	}
+	
+	reg_update(&linreg, linerr, 0);				
+	return linreg.y>>12;		
+}
+*/
+
 extern void encoder_init(int32_t s);
 
-static int32_t curr_tbl[8] = {0,0,0,0,0,0,0,0};
-static int32_t icurr = 0;
-
-__attribute__ ((section(".main_sec")))
 int main()
 {
 	uint32_t code;
@@ -510,19 +543,13 @@ int main()
 	int32_t abc[3];		
 	int32_t fstart;
 	
+	for(i=0; i<200000; i++);
+	
 	system_init();	
 	ssi_init();
 	dac_init();
 	adc_dma_init();	
 
-	/*while(1){
-	
-		adc_dma_wait();				
-		MDR_DAC->DAC1_DATA = (0xfff&(adc_dma_buffer[0]));
-		MDR_DAC->DAC2_DATA = (0xfff&(adc_dma_buffer[1]));		
-		//MDR_PORTA->RXTX ^= 0x01; // PA0					
-	}*/
-	
 	// init the regulators
 	reg_init(&dreg, KI_DQCUR, KP_DQCUR);
 	reg_init(&qreg, KI_DQCUR, KP_DQCUR);	
@@ -535,13 +562,6 @@ int main()
 	control_word = 0;
 	status_word = 0;
 	
-	for(i=0; i<1024; i++)
-	{
-		mfilter(0, 0);
-		//lpos_filter(0, 0);
-		//lref_filter(0, 0);		
-	}	
-
 	dca = 0;
 	dcc = 0;
 	startphase = 0;
@@ -559,6 +579,7 @@ int main()
 		reflinpos += (0xfff&(adc_dma_buffer[0]));
 		linpos += (0xfff&(adc_dma_buffer[1]));		
 		
+		mfilter(0, 0);		
 	}
 
 	dca = dca >> 10;
@@ -591,19 +612,10 @@ int main()
 	
 	status_word = 0;
 	
-	position_proc = &remote_positioning_proc;
-	brake_off();
-	motor_on();
-	
-	icurr = 0;
-	curr_tbl[0] = 200;
-	curr_tbl[1] = 0;
-	curr_tbl[2] = -200;
-	curr_tbl[3] = 0;
-	curr_tbl[4] = 0;
-	curr_tbl[5] = 0;
-	curr_tbl[6] = 0;
-	curr_tbl[7] = 0;
+	//position_proc = &remote_positioning_proc;
+	//position_proc = &zero_positioning_proc;
+	//brake_off();
+	//motor_on();
 	
 	while(1){
 		//MDR_PORTA->RXTX |= 0x01; // PA0	
@@ -618,7 +630,7 @@ int main()
 		code = enc_crc(MDR_SSP1->DR);
 		phase = code & (1024-1);								
 		//MDR_DAC->DAC2_DATA = code;			
-
+		
 		linpos = ((0xfff&adc_dma_buffer[1])<<10)/(0xfff&adc_dma_buffer[0]);
 
 		//reflinpos = (0xfff&(adc_dma_buffer[0]));
@@ -636,6 +648,8 @@ int main()
 
 			// 3kHz
 			//MDR_PORTA->RXTX |= 0x01; // PA0	
+			
+			vpower = (0x1f & MDR_PORTB->RXTX) << 7;
 
 			//refpos = update_refposition() + startphase;
 			update_refposition();
@@ -648,113 +662,20 @@ int main()
 	
 			refspeed = position_proc();			
 			//refspeed = -5000;
-			//qref = 200; // 100 - approx 5A
-
-#ifdef CURRREG_DEBUG
-			//qref = 200; // 100 - approx 5A
-			//qref = 450;
-			// current regulator debug
-			if( (0xfff&tcnt) == 0){
-				qref = curr_tbl[icurr];
-				icurr = 0x07 & (icurr+1);
-			}
-#else
 
 			reg_update(&sreg, ((refspeed - speed)), 0);
 			qref = sreg.y>>12;
-			
 			if(qref > MAXQCURR) qref = MAXQCURR;
-			if(qref < -MAXQCURR) qref = -MAXQCURR;	
+			if(qref < -MAXQCURR) qref = -MAXQCURR;
 
-#endif			
+			//qref = 100;
 				
 			//MDR_PORTA->RXTX &= ~0x01; // PA0
 		}
 
 		update_telemetry();
 
-		/*if(ttlm){		
-			ttlm = 0;
-			MDR_PORTA->RXTX |= 0x01; // PA0	
-			update_telemetry();
-			MDR_PORTA->RXTX &= ~0x01; // PA0				
-		}*/
-		
-/*
-  		if( (127 & tcnt) == 127){			
-			uint32_t t = (tpll & 127);
-				
-			if( t < 64) tcnt--;
-			else  tcnt ++;
-
-			//if( (t > 125) || (t < 3) ){
-			if(t > 64){
-				//MDR_PORTA->RXTX |= 0x01; // PA0	
-				update_telemetry();
-				//MDR_PORTA->RXTX &= ~0x01; // PA0	
-			}
-		}
-*/
-/*
-  		if( fpll && ((127 & tcnt) == 127)){
-			
-			//fpll = 0;
-			uint32_t t = (tpll & 127);
-				
-			if( t < 64) tcnt--;
-			else  if( t > 64) tcnt ++;			
-
-			if( (t > 125) || (t < 3) ){
-			fpll = 0;
-			//if( (tpll & 127) == (tcnt & 127)){
-			MDR_PORTA->RXTX |= 0x01; // PA0	
-			update_telemetry();
-			MDR_PORTA->RXTX &= ~0x01; // PA0	
-			}
-		}
-*/				
-
-
-		/*if( (0x7fff&tcnt) == 0){
-			if(refpos == 50000 - startphase) refpos = -50000 - startphase; 
-			else refpos = 50000 - startphase;
-		}*/				
-		
-		/*if( (0x7fff&tcnt) == 0){
-			if(refspeed == -1000) refspeed = 1000;
-			else refspeed = -1000;
-		}*/		
-//---------------------------------------------		
-// current regulator debug			
-#ifdef CURRREG_DEBUG
-		debug_signal(ia<<2);
-
-		ed = (qref-ia);
-		reg_update(&dreg, ed , fsat);
-		
-		vd = dreg.y>>12;
-		fsat = 0;
-		if(vd > 511){
-			fsat = 1;
-			vd = 511;
-		}		
-		
-		if(vd < -511){
-			fsat = 1;
-			vd = -511;
-		}				
-			
-		gDebug = vd;
-			
-		pwm_seta(vd);
-		//pwm_seta(vd);
-		//pwm_setb(vd);		
-		continue;
-#endif
-//---------------------------------------------		
-
 		// vector sync motor controller
-		//phase = 1023&(phase+900);    // phase offset for correct rotor position
 		phase = 1023&(phase+700);    // phase offset for correct rotor position
 
 		// convert abc currents to dq
@@ -797,91 +718,5 @@ int main()
 		pwm_setc(abc[2]);	
 	
 	}	
-
-	/*
-	while(1){
-		adc_dma_wait();			
-		
-		// get the currents from ADC	
-		ia = (0xfff&(adc_dma_buffer[1])) - dca;
-		ic = (0xfff&(adc_dma_buffer[0])) - dcc;
-		ib = -ia-ic;		
-		
-		debug_signal(ic<<3);
-		
-		//continue;
-		
-		tcnt++;
-
-		//qref = 10;
- 		// current regulator debug
-		if( (0x03ff&tcnt) == 0){
-			if(qref == 0) qref = 100; // 100 is abt 1A
-			else qref = 0;
-		}
-		
-
-		ed = qref-ic;
-		reg_update(&dreg, ed , fsat);
-		
-		vd = dreg.y>>12;
-		fsat = 0;
-		if(vd > 511){
-			fsat = 1;
-			vd = 511;
-		}		
-		
-		if(vd < -511){
-			fsat = 1;
-			vd = -511;
-		}				
-			
-		pwm_seta(vd);
-		pwm_setc(-vd);
-
-	}
-*/
-
-/*
-	while(1){
-		adc_dma_wait();
-		MDR_DAC->DAC2_DATA = (0xfff&(adc_dma_buffer[0]));
-	}
-*/
-	/*while(1){
-		
-		MDR_DAC->DAC2_DATA = 4095&(code++);
-	}*/
-/*	
-	while(1)
-	{
-		//__WFI();
-		//MDR_PORTA->RXTX ^= 0x01; // PA0
-	
-		if(MDR_SSP1->SR & SSP_SR_RFF) 
-		{
-			// RX FIFO is full
-						
-			code = g2b((MAXENC-1) & (MDR_SSP1->DR));		
-			if(code > code1)
-				speed = code - code1;
-			else
-				speed = code - code1 + 4096;
-			
-			code1 = code;
-			
-			//MDR_DAC->DAC2_DATA = speed << 4;
-			MDR_DAC->DAC2_DATA = code;		
-			
-		}
-		
-		if(MDR_ADC->ADC1_STATUS & ADC_STATUS_FLG_REG_EOCIF)
-		{
-			//MDR_DAC->DAC2_DATA = MDR_ADC->ADC1_RESULT;
-		}
-
-	}
-*/
-
 
 }

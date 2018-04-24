@@ -10,6 +10,8 @@ extern const int32_t cos_tb[1024];
 //#define Ki 1
 //#define Kp 0
 
+int32_t mag_current = 0;
+
 
 int32_t mycos(int32_t a)
 {
@@ -149,14 +151,15 @@ int32_t svpwm(int32_t *abc, int32_t *dq, int32_t phase)
 	cord_atan(dq, &ang, &mag);
 	
 	mag = mag >> 10;
-	int32_t phi = 1023&(phase + ang);
-	
+	mag_current = mag;
+
 	if(mag > 500) {
 		mag = 500;
 		fs = 1;
 	}
 	else fs = 0;
-			
+
+	int32_t phi = 1023&(phase + ang);			
 	int32_t ns = (phi*6) >> 10;	 // get the sector number
 	int32_t r1;
 	int32_t r2;
@@ -251,9 +254,35 @@ int32_t get_speed(int32_t enc, int32_t *pos)
 	
 	return ((denc>>1)*rate)>>12;
 } 
+/*
+int32_t lpos_filter(int32_t x, int32_t a)
+{
+	static int32_t j = 0;
+	//static int32_t a = 0;
+	static int32_t b[128];
+	
+	j = (j+1)&(128-1);
+	a = a-b[j]+x;
+	b[j] = x;
+	
+	return a;
+}
+int32_t lref_filter(int32_t x, int32_t a)
+{
+	static int32_t j = 0;
+	//static int32_t a = 0;
+	static int32_t b[128];
+	
+	j = (j+1)&(128-1);
+	a = a-b[j]+x;
+	b[j] = x;
+	
+	return a;
+}
+*/
 
+/*
 #define MFORDER 1024
-
 int32_t mfilter(int32_t x, int32_t a)
 {
 	static int32_t j = 0;
@@ -266,6 +295,8 @@ int32_t mfilter(int32_t x, int32_t a)
 	
 	return a;
 }
+*/
+
 
 int32_t rfilter1(int32_t x)
 {
